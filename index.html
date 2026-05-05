@@ -2,158 +2,182 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>TON Farm</title>
+<title>Samsa Tap</title>
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: linear-gradient(#0b1f3a, #1e3c72);
+    background: linear-gradient(180deg, #0f172a, #1e3a8a);
     color: white;
     text-align: center;
     overflow: hidden;
+    touch-action: manipulation;
 }
 
-h1 {
-    margin-top: 10px;
+/* верх */
+.top {
+    margin-top: 20px;
+    font-size: 18px;
 }
 
+/* полоски */
 .bar {
     width: 80%;
     height: 12px;
     background: #333;
-    margin: 10px auto;
+    margin: 8px auto;
     border-radius: 10px;
+    overflow: hidden;
 }
 
 .fill {
     height: 100%;
-    width: 0%;
     background: orange;
-    border-radius: 10px;
+    width: 50%;
 }
 
-#game {
-    margin-top: 20px;
-}
-
+/* тандыр */
 #tandoor {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 220px;
-    user-select: none;
-    touch-action: manipulation;
+    height: 220px;
 }
 
-.samsa {
+#tandoor img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+/* эффект */
+#effect img {
     position: absolute;
-    width: 40px;
-    pointer-events: none;
+    width: 30px;
     animation: fly 1s forwards;
 }
 
 @keyframes fly {
-    from {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(-120px);
-        opacity: 0;
-    }
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-120px); opacity: 0; }
 }
 </style>
 </head>
 
 <body>
 
-<h1 id="name">Игрок</h1>
+<div class="top">
+    <div id="name">Игрок</div>
+    💰 Баланс: <span id="balance">0</span>
 
-<div>💰 Баланс: <span id="money">0</span></div>
+    <div>⚡ Энергия</div>
+    <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-<div>⚡ Энергия: <span id="energyText">100</span>/100</div>
-<div class="bar"><div id="energyBar" class="fill"></div></div>
+    <div>📈 Уровень</div>
+    <div class="bar"><div id="levelBar" class="fill"></div></div>
+</div>
 
-<div>📈 Уровень: <span id="level">1</span></div>
-<div class="bar"><div id="levelBar" class="fill"></div></div>
+<div id="effect"></div>
 
-<div id="game">
-    <img id="tandoor" src="assets/tandoor.png">
+<div id="tandoor" onclick="tap()">
+    <img src="assets/tandoor.png">
 </div>
 
 <script>
+let balance = 0;
+let energy = 10;
+let level = 1;
+let maxEnergy = 10;
 
-// ===== TELEGRAM =====
-if (window.Telegram && Telegram.WebApp) {
-    Telegram.WebApp.expand();
-
-    const user = Telegram.WebApp.initDataUnsafe?.user;
+// имя из Telegram
+if (window.Telegram?.WebApp) {
+    let user = Telegram.WebApp.initDataUnsafe.user;
     if (user) {
         document.getElementById("name").innerText = user.first_name;
     }
 }
 
-// ===== ДАННЫЕ =====
-let money = parseInt(localStorage.getItem("money")) || 0;
-let energy = parseInt(localStorage.getItem("energy")) || 100;
+// загрузка
+balance = parseInt(localStorage.getItem("balance")) || 0;
+energy = parseInt(localStorage.getItem("energy")) || 10;
+level = parseInt(localStorage.getItem("level")) || 1;
+maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
 
-// уровень считается от денег
-let level = Math.floor(money / 100) + 1;
-
-// ===== UI =====
+// обновление
 function updateUI() {
-    document.getElementById("money").innerText = money;
-    document.getElementById("energyText").innerText = energy;
-    document.getElementById("energyBar").style.width = energy + "%";
+    document.getElementById("balance").innerText = balance;
 
-    // уровень
-    level = Math.floor(money / 100) + 1;
-    document.getElementById("level").innerText = level;
+    document.getElementById("energyBar").style.width =
+        (energy / maxEnergy * 100) + "%";
 
-    let progress = money % 100;
-    document.getElementById("levelBar").style.width = progress + "%";
+    document.getElementById("levelBar").style.width =
+        (balance % (level * 10)) / (level * 10) * 100 + "%";
 }
 
-updateUI();
+// сохранение
+function save() {
+    localStorage.setItem("balance", balance);
+    localStorage.setItem("energy", energy);
+    localStorage.setItem("level", level);
+    localStorage.setItem("maxEnergy", maxEnergy);
+}
 
-// ===== КЛИК =====
-const tandoor = document.getElementById("tandoor");
-
-tandoor.addEventListener("click", (e) => {
-
+// тап
+function tap() {
     if (energy <= 0) return;
 
-    energy -= 1;
-    money += 1;
+    balance++;
+    energy--;
 
-    // сохранение
-    localStorage.setItem("money", money);
-    localStorage.setItem("energy", energy);
+    if (balance >= level * 10) {
+        level++;
+        maxEnergy += 2;
+    }
 
     updateUI();
+    save();
+    spawnSamsa();
+}
 
-    // самса
-    const img = document.createElement("img");
-    img.src = "assets/samsa.png";
-    img.className = "samsa";
+// самса эффект
+function spawnSamsa() {
+    let el = document.createElement("img");
+    el.src = "assets/samsa.png";
 
-    img.style.left = (e.clientX - 20) + "px";
-    img.style.top = (e.clientY - 20) + "px";
+    el.style.left = Math.random() * 80 + 10 + "%";
+    el.style.bottom = "140px";
 
-    document.body.appendChild(img);
+    document.getElementById("effect").appendChild(el);
 
-    setTimeout(() => img.remove(), 1000);
-});
+    setTimeout(() => el.remove(), 1000);
+}
 
-// ===== РЕГЕН ЭНЕРГИИ =====
+// энергия восстанавливается
 setInterval(() => {
-    if (energy < 100) {
-        energy += 1;
-        localStorage.setItem("energy", energy);
+    if (energy < maxEnergy) {
+        energy++;
         updateUI();
+        save();
     }
-}, 2000);
+}, 3000);
 
+// запрет zoom двойным тапом
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+    let now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// старт
+updateUI();
 </script>
 
 </body>
