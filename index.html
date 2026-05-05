@@ -2,49 +2,48 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
 <title>TON Farm</title>
 
 <style>
 body {
     margin: 0;
-    padding: 0;
-    background: linear-gradient(#0b1e3f, #1c3d7a);
     font-family: Arial;
-    text-align: center;
+    background: linear-gradient(#0b1f3a, #1e3c72);
     color: white;
+    text-align: center;
     overflow: hidden;
-    touch-action: manipulation;
 }
 
-.top {
-    padding: 20px;
+h1 {
+    margin-top: 10px;
 }
 
 .bar {
     width: 80%;
-    height: 10px;
+    height: 12px;
     background: #333;
     margin: 10px auto;
     border-radius: 10px;
-    overflow: hidden;
 }
 
 .fill {
     height: 100%;
-    background: orange;
     width: 50%;
+    background: orange;
+    border-radius: 10px;
+}
+
+#game {
+    position: relative;
+    margin-top: 20px;
 }
 
 #tandoor {
     width: 220px;
-    margin-top: 50px;
-    transition: transform 0.1s;
-}
-
-#tandoor:active {
-    transform: scale(0.95);
+    user-select: none;
+    touch-action: manipulation;
 }
 
 .samsa {
@@ -55,12 +54,12 @@ body {
 }
 
 @keyframes fly {
-    0% {
-        transform: translateY(0) scale(1);
+    from {
+        transform: translateY(0);
         opacity: 1;
     }
-    100% {
-        transform: translateY(-120px) scale(0.5);
+    to {
+        transform: translateY(-120px);
         opacity: 0;
     }
 }
@@ -69,79 +68,84 @@ body {
 
 <body>
 
-<div class="top">
-    <h2 id="name">Игрок</h2>
-    💰 Баланс: <span id="balance">0</span><br><br>
+<h1 id="name">Игрок</h1>
 
-    ⚡ Энергия
-    <div class="bar"><div id="energyBar" class="fill"></div></div>
+<div>💰 Баланс: <span id="money">0</span></div>
 
-    📈 Уровень
-    <div class="bar"><div id="levelBar" class="fill"></div></div>
+<div>⚡ Энергия</div>
+<div class="bar"><div id="energyBar" class="fill"></div></div>
+
+<div>📈 Уровень</div>
+<div class="bar"><div id="levelBar" class="fill"></div></div>
+
+<div id="game">
+    <img id="tandoor" src="assets/tandoor.png">
 </div>
 
-<img id="tandoor" src="assets/tandoor.png">
-
 <script>
-let balance = 0;
-let energy = 100;
-let level = 1;
 
-const balanceEl = document.getElementById("balance");
-const energyBar = document.getElementById("energyBar");
-const levelBar = document.getElementById("levelBar");
-const tandoor = document.getElementById("tandoor");
+// ===== TELEGRAM =====
+if (window.Telegram && Telegram.WebApp) {
+    Telegram.WebApp.expand();
 
-// имя из Telegram (если есть)
-if (window.Telegram?.WebApp) {
-    const user = Telegram.WebApp.initDataUnsafe.user;
+    const user = Telegram.WebApp.initDataUnsafe?.user;
     if (user) {
         document.getElementById("name").innerText = user.first_name;
     }
 }
 
+// ===== СОХРАНЕНИЕ =====
+let money = localStorage.getItem("money") ? parseInt(localStorage.getItem("money")) : 0;
+let energy = localStorage.getItem("energy") ? parseInt(localStorage.getItem("energy")) : 100;
+
+// ===== ОБНОВЛЕНИЕ UI =====
 function updateUI() {
-    balanceEl.innerText = balance;
-    energyBar.style.width = energy + "%";
-    levelBar.style.width = (balance % 100) + "%";
+    document.getElementById("money").innerText = money;
+    document.getElementById("energyBar").style.width = energy + "%";
 }
 
-tandoor.addEventListener("click", (e) => {
+updateUI();
+
+// ===== КЛИК =====
+const tandoor = document.getElementById("tandoor");
+
+tandoor.addEventListener("click", () => {
 
     if (energy <= 0) return;
 
-    balance += 1;
     energy -= 1;
+    money += 1;
 
-    // уровень
-    if (balance % 100 === 0) {
-        level++;
-    }
+    // сохраняем
+    localStorage.setItem("money", money);
+    localStorage.setItem("energy", energy);
 
     updateUI();
 
-    // анимация самсы
+    // самса
     const img = document.createElement("img");
     img.src = "assets/samsa.png";
     img.className = "samsa";
 
-    img.style.left = e.clientX - 20 + "px";
-    img.style.top = e.clientY - 20 + "px";
+    const rect = tandoor.getBoundingClientRect();
+
+    img.style.left = (rect.left + rect.width/2 - 20) + "px";
+    img.style.top = (rect.top) + "px";
 
     document.body.appendChild(img);
 
     setTimeout(() => img.remove(), 1000);
 });
 
-// восстановление энергии
+// ===== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ =====
 setInterval(() => {
     if (energy < 100) {
         energy += 1;
+        localStorage.setItem("energy", energy);
         updateUI();
     }
-}, 1000);
+}, 2000);
 
-updateUI();
 </script>
 
 </body>
