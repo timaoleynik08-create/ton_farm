@@ -1,210 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
-
-<!-- ВАЖНО: фикс мобильного зума -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Samsa Tap</title>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>TON Farm</title>
 
 <style>
-html, body {
-  margin: 0;
-  height: 100%;
-  overflow: hidden;
-  font-family: Arial;
-  background: linear-gradient(180deg, #0f172a, #1e3a8a);
-  color: white;
-  text-align: center;
-  touch-action: manipulation;
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(#0b1e3f, #1c3d7a);
+    font-family: Arial;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+    touch-action: manipulation;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
+.top {
+    padding: 20px;
 }
 
-/* имя */
-.player {
-  margin-top: 15px;
-  font-size: 18px;
-}
-
-/* блок статистики */
-.stats {
-  margin-top: 10px;
-  font-size: 16px;
-}
-
-/* полоски */
 .bar {
-  width: 80%;
-  height: 10px;
-  background: #222;
-  margin: 6px auto;
-  border-radius: 10px;
-  overflow: hidden;
+    width: 80%;
+    height: 10px;
+    background: #333;
+    margin: 10px auto;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 .fill {
-  height: 100%;
-  background: orange;
-  width: 50%;
+    height: 100%;
+    background: orange;
+    width: 50%;
 }
 
-/* тандыр */
 #tandoor {
-  position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ff7b00, #5a1a00);
-  box-shadow: 0 0 50px orange;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.1s;
+    width: 220px;
+    margin-top: 50px;
+    transition: transform 0.1s;
 }
 
 #tandoor:active {
-  transform: translateX(-50%) scale(0.92);
+    transform: scale(0.95);
 }
 
-/* огонь внутри */
-.fire {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffcc00, #ff5500);
-  box-shadow: 0 0 30px orange;
-}
-
-/* эффект самсы */
-#effect span {
-  position: absolute;
-  font-size: 30px;
-  animation: fly 1s forwards;
+.samsa {
+    position: absolute;
+    width: 40px;
+    pointer-events: none;
+    animation: fly 1s forwards;
 }
 
 @keyframes fly {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-150px); opacity: 0; }
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-120px) scale(0.5);
+        opacity: 0;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="player" id="player">Игрок</div>
+<div class="top">
+    <h2 id="name">Игрок</h2>
+    💰 Баланс: <span id="balance">0</span><br><br>
 
-<div class="stats">
-💰 Баланс: <span id="balance">0</span>
+    ⚡ Энергия
+    <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-<br><br>
-⚡ Энергия
-<div class="bar"><div id="energyBar" class="fill"></div></div>
-
-📈 Уровень
-<div class="bar"><div id="levelBar" class="fill"></div></div>
+    📈 Уровень
+    <div class="bar"><div id="levelBar" class="fill"></div></div>
 </div>
 
-<!-- тандыр -->
-<div id="tandoor" onclick="tap()">
-  <div class="fire"></div>
-</div>
-
-<div id="effect"></div>
+<img id="tandoor" src="assets/tandoor.png">
 
 <script>
-let tg = window.Telegram.WebApp;
-tg.expand();
+let balance = 0;
+let energy = 100;
+let level = 1;
 
-// имя игрока
-let user = tg.initDataUnsafe?.user;
-if (user) {
-  document.getElementById("player").innerText =
-    user.first_name + (user.last_name ? " " + user.last_name : "");
+const balanceEl = document.getElementById("balance");
+const energyBar = document.getElementById("energyBar");
+const levelBar = document.getElementById("levelBar");
+const tandoor = document.getElementById("tandoor");
+
+// имя из Telegram (если есть)
+if (window.Telegram?.WebApp) {
+    const user = Telegram.WebApp.initDataUnsafe.user;
+    if (user) {
+        document.getElementById("name").innerText = user.first_name;
+    }
 }
 
-// данные
-let balance = +localStorage.getItem("balance") || 0;
-let energy = +localStorage.getItem("energy") || 10;
-let level = +localStorage.getItem("level") || 1;
-let maxEnergy = +localStorage.getItem("maxEnergy") || 10;
-
-// обновление UI
 function updateUI() {
-  document.getElementById("balance").innerText = balance;
-
-  document.getElementById("energyBar").style.width =
-    (energy / maxEnergy * 100) + "%";
-
-  document.getElementById("levelBar").style.width =
-    ((balance % 10) * 10) + "%";
+    balanceEl.innerText = balance;
+    energyBar.style.width = energy + "%";
+    levelBar.style.width = (balance % 100) + "%";
 }
 
-// сохранение
-function save() {
-  localStorage.setItem("balance", balance);
-  localStorage.setItem("energy", energy);
-  localStorage.setItem("level", level);
-  localStorage.setItem("maxEnergy", maxEnergy);
-}
+tandoor.addEventListener("click", (e) => {
 
-// тап
-function tap() {
-  if (energy <= 0) return;
+    if (energy <= 0) return;
 
-  balance++;
-  energy--;
+    balance += 1;
+    energy -= 1;
 
-  if (balance >= level * 10) {
-    level++;
-    maxEnergy += 2;
-  }
+    // уровень
+    if (balance % 100 === 0) {
+        level++;
+    }
 
-  updateUI();
-  save();
-  spawnSamsa();
-}
+    updateUI();
 
-// эффект самсы
-function spawnSamsa() {
-  let el = document.createElement("span");
-  el.innerText = "🥟";
-  el.style.left = Math.random() * 100 + "%";
-  el.style.bottom = "120px";
-  document.getElementById("effect").appendChild(el);
+    // анимация самсы
+    const img = document.createElement("img");
+    img.src = "assets/samsa.png";
+    img.className = "samsa";
 
-  setTimeout(() => el.remove(), 1000);
-}
+    img.style.left = e.clientX - 20 + "px";
+    img.style.top = e.clientY - 20 + "px";
+
+    document.body.appendChild(img);
+
+    setTimeout(() => img.remove(), 1000);
+});
 
 // восстановление энергии
 setInterval(() => {
-  if (energy < maxEnergy) {
-    energy++;
-    updateUI();
-    save();
-  }
-}, 2000);
+    if (energy < 100) {
+        energy += 1;
+        updateUI();
+    }
+}, 1000);
 
-// 🔥 фикс двойного тапа (очень важно)
-let lastTap = 0;
-document.addEventListener("touchend", function (e) {
-  let now = new Date().getTime();
-  if (now - lastTap < 300) {
-    e.preventDefault();
-  }
-  lastTap = now;
-}, false);
-
-// старт
 updateUI();
 </script>
 
