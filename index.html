@@ -2,185 +2,285 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-
-<meta name="viewport" content="
-width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no
-">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>TON Farm</title>
 
 <style>
-body {
+html, body {
     margin: 0;
-    font-family: Arial;
-    background: linear-gradient(180deg, #0f172a, #1e3a8a);
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #0b1f3a 0%, #1e3c72 100%);
     color: white;
     text-align: center;
-    overflow: hidden;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* верх */
+* {
+    box-sizing: border-box;
+}
+
 .top {
-    margin-top: 20px;
+    padding: 18px 14px 0;
 }
 
-/* полосы */
+.name {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.stat {
+    font-size: 18px;
+    margin: 10px 0 6px;
+}
+
 .bar {
-    width: 80%;
+    width: min(78vw, 520px);
     height: 12px;
-    background: #333;
-    margin: 8px auto;
-    border-radius: 10px;
+    background: rgba(255,255,255,0.16);
+    margin: 0 auto 16px;
+    border-radius: 999px;
     overflow: hidden;
 }
 
 .fill {
     height: 100%;
-    background: orange;
+    width: 0%;
+    background: linear-gradient(90deg, #ffb000, #ff8a00);
+    border-radius: 999px;
+    transition: width 0.15s linear;
 }
 
-/* тандыр */
-#tandoor {
+.game-area {
     position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 220px;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
 }
 
-#tandoor img {
-    width: 100%;
+#tandoor {
+    width: min(64vw, 280px);
+    max-width: 280px;
+    aspect-ratio: 1 / 1;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: manipulation;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+    filter: drop-shadow(0 0 28px rgba(255, 170, 0, 0.28));
 }
 
-/* эффект самсы */
-#effect img {
+#tandoor:active {
+    transform: scale(0.95);
+}
+
+#effect-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.samsa-fly {
     position: absolute;
-    width: 40px;
-    animation: fly 1s forwards;
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    animation: flyUp 900ms ease-out forwards;
+    will-change: transform, opacity;
 }
 
-@keyframes fly {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-120px); opacity: 0; }
+@keyframes flyUp {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-160px) scale(0.55) rotate(18deg);
+        opacity: 0;
+    }
+}
+
+@media (max-height: 700px) {
+    .name {
+        font-size: 26px;
+        margin-bottom: 12px;
+    }
+    .stat {
+        font-size: 16px;
+    }
+    .bar {
+        margin-bottom: 12px;
+    }
 }
 </style>
 </head>
 
 <body>
+    <div class="top">
+        <div class="name" id="playerName">Игрок</div>
 
-<div class="top">
-    <h2 id="name">Игрок</h2>
+        <div class="stat">💰 Баланс: <span id="balance">0</span></div>
 
-    💰 Баланс: <span id="balance">0</span>
+        <div class="stat">⚡ Энергия: <span id="energyText">10/10</span></div>
+        <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-    <div>⚡ Энергия</div>
-    <div class="bar"><div id="energyBar" class="fill"></div></div>
+        <div class="stat">📈 Уровень: <span id="levelText">1</span></div>
+        <div class="bar"><div id="levelBar" class="fill"></div></div>
+    </div>
 
-    <div>📈 Уровень</div>
-    <div class="bar"><div id="levelBar" class="fill"></div></div>
-</div>
+    <div id="effect-layer"></div>
 
-<div id="effect"></div>
-
-<div id="tandoor" onclick="tap()">
-    <img src="https://i.postimg.cc/3r8m1F0F/tandoor.png">
-</div>
+    <div class="game-area">
+        <img id="tandoor" src="assets/tandoor.png" alt="tandoor">
+    </div>
 
 <script>
-let balance = 0;
-let energy = 10;
-let level = 1;
-let maxEnergy = 10;
+(() => {
+    const balanceEl = document.getElementById('balance');
+    const energyTextEl = document.getElementById('energyText');
+    const energyBarEl = document.getElementById('energyBar');
+    const levelTextEl = document.getElementById('levelText');
+    const levelBarEl = document.getElementById('levelBar');
+    const playerNameEl = document.getElementById('playerName');
+    const tandoorEl = document.getElementById('tandoor');
+    const effectLayer = document.getElementById('effect-layer');
 
-/* Telegram имя */
-if (window.Telegram?.WebApp) {
-    let user = Telegram.WebApp.initDataUnsafe.user;
-    if (user) {
-        document.getElementById("name").innerText = user.first_name;
-    }
-}
+    const STORAGE_KEYS = {
+        balance: 'tonfarm_balance',
+        energy: 'tonfarm_energy',
+        name: 'tonfarm_name'
+    };
 
-/* загрузка */
-balance = +localStorage.getItem("balance") || 0;
-energy = +localStorage.getItem("energy") || 10;
-level = +localStorage.getItem("level") || 1;
-maxEnergy = +localStorage.getItem("maxEnergy") || 10;
+    let balance = parseInt(localStorage.getItem(STORAGE_KEYS.balance) || '0', 10);
+    let energy = parseInt(localStorage.getItem(STORAGE_KEYS.energy) || '10', 10);
 
-/* обновление UI */
-function updateUI() {
-    document.getElementById("balance").innerText = balance;
+    let maxEnergy = 10;
 
-    document.getElementById("energyBar").style.width =
-        (energy / maxEnergy * 100) + "%";
-
-    document.getElementById("levelBar").style.width =
-        ((balance % (level * 10)) / (level * 10)) * 100 + "%";
-}
-
-/* сохранение */
-function save() {
-    localStorage.setItem("balance", balance);
-    localStorage.setItem("energy", energy);
-    localStorage.setItem("level", level);
-    localStorage.setItem("maxEnergy", maxEnergy);
-}
-
-/* тап */
-function tap() {
-    if (energy <= 0) return;
-
-    balance++;
-    energy--;
-
-    if (balance >= level * 10) {
-        level++;
-        maxEnergy += 2;
+    function getLevel(currentBalance) {
+        return Math.floor(currentBalance / 10) + 1;
     }
 
-    spawnSamsa();
-    updateUI();
-    save();
-}
+    function getLevelProgress(currentBalance) {
+        return currentBalance % 10;
+    }
 
-/* самса */
-function spawnSamsa() {
-    let el = document.createElement("img");
-    el.src = "https://i.postimg.cc/1tW8K3Yh/samsa.png";
+    function getMaxEnergy(level) {
+        return 10 + (level - 1) * 2;
+    }
 
-    el.style.left = Math.random() * 80 + 10 + "%";
-    el.style.bottom = "140px";
+    function saveState() {
+        localStorage.setItem(STORAGE_KEYS.balance, String(balance));
+        localStorage.setItem(STORAGE_KEYS.energy, String(energy));
+    }
 
-    document.getElementById("effect").appendChild(el);
+    function updateUI() {
+        const level = getLevel(balance);
+        const progress = getLevelProgress(balance);
+        maxEnergy = getMaxEnergy(level);
 
-    setTimeout(() => el.remove(), 1000);
-}
+        if (energy > maxEnergy) energy = maxEnergy;
 
-/* восстановление энергии */
-setInterval(() => {
-    if (energy < maxEnergy) {
-        energy++;
+        balanceEl.textContent = balance;
+        energyTextEl.textContent = `${energy}/${maxEnergy}`;
+        levelTextEl.textContent = level;
+
+        energyBarEl.style.width = `${(energy / maxEnergy) * 100}%`;
+        levelBarEl.style.width = `${(progress / 10) * 100}%`;
+    }
+
+    function setPlayerName() {
+        try {
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+
+                const user = Telegram.WebApp.initDataUnsafe?.user;
+                if (user) {
+                    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+                    playerNameEl.textContent = fullName || 'Игрок';
+
+                    localStorage.setItem(STORAGE_KEYS.name, fullName || 'Игрок');
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        const savedName = localStorage.getItem(STORAGE_KEYS.name);
+        if (savedName) {
+            playerNameEl.textContent = savedName;
+        }
+    }
+
+    function spawnSamsa(clientX, clientY) {
+        const img = document.createElement('img');
+        img.src = 'assets/samsa.png';
+        img.className = 'samsa-fly';
+
+        const size = 42;
+        const x = Math.max(0, clientX - size / 2);
+        const y = Math.max(0, clientY - size / 2);
+
+        img.style.left = `${x}px`;
+        img.style.top = `${y}px`;
+
+        effectLayer.appendChild(img);
+
+        setTimeout(() => {
+            img.remove();
+        }, 950);
+    }
+
+    function tap(event) {
+        if (energy <= 0) return;
+
+        balance += 1;
+        energy -= 1;
+
+        saveState();
         updateUI();
-        save();
-    }
-}, 3000);
 
-/* отключение зума */
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function (event) {
-    let now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-    }
-    lastTouchEnd = now;
-}, false);
+        const rect = tandoorEl.getBoundingClientRect();
+        const cx = event?.clientX ?? (rect.left + rect.width / 2);
+        const cy = event?.clientY ?? (rect.top + rect.height / 2);
 
-/* старт */
-updateUI();
+        spawnSamsa(cx, cy);
+    }
+
+    tandoorEl.addEventListener('click', tap);
+    tandoorEl.addEventListener('touchend', function (e) {
+        e.preventDefault();
+        const touch = e.changedTouches && e.changedTouches[0];
+        tap(touch || e);
+    }, { passive: false });
+
+    setPlayerName();
+    updateUI();
+
+    setInterval(() => {
+        const level = getLevel(balance);
+        maxEnergy = getMaxEnergy(level);
+
+        if (energy < maxEnergy) {
+            energy += 1;
+            saveState();
+            updateUI();
+        }
+    }, 2500);
+
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('dblclick', e => e.preventDefault());
+})();
 </script>
-
 </body>
 </html>
