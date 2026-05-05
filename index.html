@@ -17,13 +17,11 @@ body {
     touch-action: manipulation;
 }
 
-/* верх */
 .top {
     margin-top: 20px;
     font-size: 18px;
 }
 
-/* полоски */
 .bar {
     width: 80%;
     height: 12px;
@@ -36,10 +34,9 @@ body {
 .fill {
     height: 100%;
     background: orange;
-    width: 50%;
+    width: 0%;
 }
 
-/* тандыр */
 #tandoor {
     position: fixed;
     bottom: 30px;
@@ -55,16 +52,16 @@ body {
     border-radius: 50%;
 }
 
-/* эффект */
 #effect img {
     position: absolute;
-    width: 30px;
+    width: 35px;
+    pointer-events: none;
     animation: fly 1s forwards;
 }
 
 @keyframes fly {
     0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-120px); opacity: 0; }
+    100% { transform: translateY(-140px); opacity: 0; }
 }
 </style>
 </head>
@@ -75,51 +72,54 @@ body {
     <div id="name">Игрок</div>
     💰 Баланс: <span id="balance">0</span>
 
-    <div>⚡ Энергия</div>
+    <div>⚡ Энергия <span id="energyText"></span></div>
     <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-    <div>📈 Уровень</div>
+    <div>📈 Уровень: <span id="levelText">1</span></div>
     <div class="bar"><div id="levelBar" class="fill"></div></div>
 </div>
 
 <div id="effect"></div>
 
-<div id="tandoor" onclick="tap()">
+<div id="tandoor">
     <img src="assets/tandoor.png">
 </div>
 
 <script>
-let balance = 0;
-let energy = 10;
-let level = 1;
-let maxEnergy = 10;
 
-// имя из Telegram
+// ===== TELEGRAM =====
 if (window.Telegram?.WebApp) {
-    let user = Telegram.WebApp.initDataUnsafe.user;
+    Telegram.WebApp.expand();
+
+    const user = Telegram.WebApp.initDataUnsafe?.user;
     if (user) {
         document.getElementById("name").innerText = user.first_name;
     }
 }
 
-// загрузка
-balance = parseInt(localStorage.getItem("balance")) || 0;
-energy = parseInt(localStorage.getItem("energy")) || 10;
-level = parseInt(localStorage.getItem("level")) || 1;
-maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
+// ===== ДАННЫЕ =====
+let balance = parseInt(localStorage.getItem("balance")) || 0;
+let energy = parseInt(localStorage.getItem("energy")) || 10;
+let level = parseInt(localStorage.getItem("level")) || 1;
+let maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
 
-// обновление
+// ===== UI =====
 function updateUI() {
     document.getElementById("balance").innerText = balance;
+    document.getElementById("energyText").innerText = energy + "/" + maxEnergy;
+    document.getElementById("levelText").innerText = level;
 
     document.getElementById("energyBar").style.width =
         (energy / maxEnergy * 100) + "%";
 
+    let need = level * 10;
+    let progress = balance % need;
+
     document.getElementById("levelBar").style.width =
-        (balance % (level * 10)) / (level * 10) * 100 + "%";
+        (progress / need * 100) + "%";
 }
 
-// сохранение
+// ===== СОХРАНЕНИЕ =====
 function save() {
     localStorage.setItem("balance", balance);
     localStorage.setItem("energy", energy);
@@ -127,8 +127,9 @@ function save() {
     localStorage.setItem("maxEnergy", maxEnergy);
 }
 
-// тап
-function tap() {
+// ===== ТАП =====
+document.getElementById("tandoor").addEventListener("click", (e) => {
+
     if (energy <= 0) return;
 
     balance++;
@@ -141,32 +142,32 @@ function tap() {
 
     updateUI();
     save();
-    spawnSamsa();
-}
+    spawnSamsa(e);
+});
 
-// самса эффект
-function spawnSamsa() {
+// ===== САМСА =====
+function spawnSamsa(e) {
     let el = document.createElement("img");
     el.src = "assets/samsa.png";
 
-    el.style.left = Math.random() * 80 + 10 + "%";
-    el.style.bottom = "140px";
+    el.style.left = (e.clientX - 15) + "px";
+    el.style.top = (e.clientY - 15) + "px";
 
     document.getElementById("effect").appendChild(el);
 
     setTimeout(() => el.remove(), 1000);
 }
 
-// энергия восстанавливается
+// ===== ЭНЕРГИЯ =====
 setInterval(() => {
     if (energy < maxEnergy) {
         energy++;
         updateUI();
         save();
     }
-}, 3000);
+}, 2000);
 
-// запрет zoom двойным тапом
+// ===== УБРАТЬ ZOOM =====
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function (event) {
     let now = (new Date()).getTime();
@@ -176,8 +177,9 @@ document.addEventListener('touchend', function (event) {
     lastTouchEnd = now;
 }, false);
 
-// старт
+// ===== СТАРТ =====
 updateUI();
+
 </script>
 
 </body>
