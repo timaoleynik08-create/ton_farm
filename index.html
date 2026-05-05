@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Samsa Tap</title>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
 body {
     margin: 0;
@@ -13,10 +15,24 @@ body {
     text-align: center;
 }
 
-/* верхняя панель */
+/* верх */
 .top {
     margin-top: 20px;
     font-size: 18px;
+}
+
+/* шкала */
+.bar {
+    width: 80%;
+    margin: 10px auto;
+    background: #333;
+    border-radius: 10px;
+}
+.progress {
+    height: 10px;
+    background: lime;
+    width: 0%;
+    border-radius: 10px;
 }
 
 /* тандыр */
@@ -26,8 +42,8 @@ body {
   left: 50%;
   transform: translateX(-50%);
 
-  width: 180px;
-  height: 180px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
 
   background: radial-gradient(circle, #ff7b00, #5a1a00);
@@ -35,9 +51,9 @@ body {
   align-items: center;
   justify-content: center;
 
-  font-size: 60px;
+  font-size: 80px;
   cursor: pointer;
-  box-shadow: 0 0 40px orange;
+  box-shadow: 0 0 60px orange;
   transition: transform 0.1s;
 }
 
@@ -45,10 +61,10 @@ body {
   transform: translateX(-50%) scale(0.9);
 }
 
-/* эффект самсы */
+/* самса эффект */
 #effect span {
   position: absolute;
-  font-size: 28px;
+  font-size: 30px;
   animation: fly 1s forwards;
 }
 
@@ -62,42 +78,53 @@ body {
 <body>
 
 <div class="top">
+  👤 <span id="name">Игрок</span><br>
   💰 Баланс: <span id="balance">0</span><br>
   ⚡ Энергия: <span id="energy">10</span><br>
   📈 Уровень: <span id="level">1</span>
 </div>
 
-<!-- тандыр -->
+<div class="bar">
+  <div id="progress" class="progress"></div>
+</div>
+
 <div id="tandoor" onclick="tap()">🔥</div>
 
 <div id="effect"></div>
 
 <script>
-// данные
-let balance = 0;
-let energy = 10;
-let level = 1;
-let maxEnergy = 10;
+// Telegram
+let tg = window.Telegram.WebApp;
+tg.expand();
 
-// загрузка
-if (localStorage.getItem("balance")) {
-    balance = parseInt(localStorage.getItem("balance"));
+let user = tg.initDataUnsafe?.user;
+
+// имя
+let name = localStorage.getItem("name");
+
+if (user) {
+    name = user.first_name;
+} else if (!name) {
+    name = prompt("Введите имя");
 }
-if (localStorage.getItem("energy")) {
-    energy = parseInt(localStorage.getItem("energy"));
-}
-if (localStorage.getItem("level")) {
-    level = parseInt(localStorage.getItem("level"));
-}
-if (localStorage.getItem("maxEnergy")) {
-    maxEnergy = parseInt(localStorage.getItem("maxEnergy"));
-}
+
+localStorage.setItem("name", name);
+
+// данные
+let balance = parseInt(localStorage.getItem("balance")) || 0;
+let energy = parseInt(localStorage.getItem("energy")) || 10;
+let level = parseInt(localStorage.getItem("level")) || 1;
+let maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
 
 // обновление
 function updateUI() {
+    document.getElementById("name").innerText = name;
     document.getElementById("balance").innerText = balance;
     document.getElementById("energy").innerText = energy;
     document.getElementById("level").innerText = level;
+
+    let progress = (balance % (level * 10)) / (level * 10) * 100;
+    document.getElementById("progress").style.width = progress + "%";
 }
 
 // сохранение
@@ -115,7 +142,6 @@ function tap() {
     balance += 1;
     energy -= 1;
 
-    // уровень
     if (balance >= level * 10) {
         level += 1;
         maxEnergy += 2;
@@ -126,7 +152,7 @@ function tap() {
     spawnSamsa();
 }
 
-// самса эффект
+// эффект самсы
 function spawnSamsa() {
     const effect = document.getElementById("effect");
 
