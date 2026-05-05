@@ -2,9 +2,15 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Samsa Tap</title>
+<meta name="viewport" content="
+width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no
+">
+
+<title>TON Farm</title>
 
 <style>
 body {
@@ -17,11 +23,12 @@ body {
     touch-action: manipulation;
 }
 
+/* верх */
 .top {
     margin-top: 20px;
-    font-size: 18px;
 }
 
+/* полосы */
 .bar {
     width: 80%;
     height: 12px;
@@ -34,34 +41,31 @@ body {
 .fill {
     height: 100%;
     background: orange;
-    width: 0%;
 }
 
+/* тандыр */
 #tandoor {
     position: fixed;
-    bottom: 30px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
     width: 220px;
-    height: 220px;
 }
 
 #tandoor img {
     width: 100%;
-    height: 100%;
-    border-radius: 50%;
 }
 
+/* эффект самсы */
 #effect img {
     position: absolute;
-    width: 35px;
-    pointer-events: none;
+    width: 40px;
     animation: fly 1s forwards;
 }
 
 @keyframes fly {
     0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-140px); opacity: 0; }
+    100% { transform: translateY(-120px); opacity: 0; }
 }
 </style>
 </head>
@@ -69,57 +73,55 @@ body {
 <body>
 
 <div class="top">
-    <div id="name">Игрок</div>
+    <h2 id="name">Игрок</h2>
+
     💰 Баланс: <span id="balance">0</span>
 
-    <div>⚡ Энергия <span id="energyText"></span></div>
+    <div>⚡ Энергия</div>
     <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-    <div>📈 Уровень: <span id="levelText">1</span></div>
+    <div>📈 Уровень</div>
     <div class="bar"><div id="levelBar" class="fill"></div></div>
 </div>
 
 <div id="effect"></div>
 
-<div id="tandoor">
-    <img src="assets/tandoor.png">
+<div id="tandoor" onclick="tap()">
+    <img src="https://i.postimg.cc/3r8m1F0F/tandoor.png">
 </div>
 
 <script>
+let balance = 0;
+let energy = 10;
+let level = 1;
+let maxEnergy = 10;
 
-// ===== TELEGRAM =====
+/* Telegram имя */
 if (window.Telegram?.WebApp) {
-    Telegram.WebApp.expand();
-
-    const user = Telegram.WebApp.initDataUnsafe?.user;
+    let user = Telegram.WebApp.initDataUnsafe.user;
     if (user) {
         document.getElementById("name").innerText = user.first_name;
     }
 }
 
-// ===== ДАННЫЕ =====
-let balance = parseInt(localStorage.getItem("balance")) || 0;
-let energy = parseInt(localStorage.getItem("energy")) || 10;
-let level = parseInt(localStorage.getItem("level")) || 1;
-let maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
+/* загрузка */
+balance = +localStorage.getItem("balance") || 0;
+energy = +localStorage.getItem("energy") || 10;
+level = +localStorage.getItem("level") || 1;
+maxEnergy = +localStorage.getItem("maxEnergy") || 10;
 
-// ===== UI =====
+/* обновление UI */
 function updateUI() {
     document.getElementById("balance").innerText = balance;
-    document.getElementById("energyText").innerText = energy + "/" + maxEnergy;
-    document.getElementById("levelText").innerText = level;
 
     document.getElementById("energyBar").style.width =
         (energy / maxEnergy * 100) + "%";
 
-    let need = level * 10;
-    let progress = balance % need;
-
     document.getElementById("levelBar").style.width =
-        (progress / need * 100) + "%";
+        ((balance % (level * 10)) / (level * 10)) * 100 + "%";
 }
 
-// ===== СОХРАНЕНИЕ =====
+/* сохранение */
 function save() {
     localStorage.setItem("balance", balance);
     localStorage.setItem("energy", energy);
@@ -127,9 +129,8 @@ function save() {
     localStorage.setItem("maxEnergy", maxEnergy);
 }
 
-// ===== ТАП =====
-document.getElementById("tandoor").addEventListener("click", (e) => {
-
+/* тап */
+function tap() {
     if (energy <= 0) return;
 
     balance++;
@@ -140,46 +141,45 @@ document.getElementById("tandoor").addEventListener("click", (e) => {
         maxEnergy += 2;
     }
 
+    spawnSamsa();
     updateUI();
     save();
-    spawnSamsa(e);
-});
+}
 
-// ===== САМСА =====
-function spawnSamsa(e) {
+/* самса */
+function spawnSamsa() {
     let el = document.createElement("img");
-    el.src = "assets/samsa.png";
+    el.src = "https://i.postimg.cc/1tW8K3Yh/samsa.png";
 
-    el.style.left = (e.clientX - 15) + "px";
-    el.style.top = (e.clientY - 15) + "px";
+    el.style.left = Math.random() * 80 + 10 + "%";
+    el.style.bottom = "140px";
 
     document.getElementById("effect").appendChild(el);
 
     setTimeout(() => el.remove(), 1000);
 }
 
-// ===== ЭНЕРГИЯ =====
+/* восстановление энергии */
 setInterval(() => {
     if (energy < maxEnergy) {
         energy++;
         updateUI();
         save();
     }
-}, 2000);
+}, 3000);
 
-// ===== УБРАТЬ ZOOM =====
+/* отключение зума */
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function (event) {
-    let now = (new Date()).getTime();
+    let now = Date.now();
     if (now - lastTouchEnd <= 300) {
         event.preventDefault();
     }
     lastTouchEnd = now;
 }, false);
 
-// ===== СТАРТ =====
+/* старт */
 updateUI();
-
 </script>
 
 </body>
