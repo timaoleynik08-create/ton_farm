@@ -30,13 +30,12 @@ h1 {
 
 .fill {
     height: 100%;
-    width: 50%;
+    width: 0%;
     background: orange;
     border-radius: 10px;
 }
 
 #game {
-    position: relative;
     margin-top: 20px;
 }
 
@@ -72,10 +71,10 @@ h1 {
 
 <div>💰 Баланс: <span id="money">0</span></div>
 
-<div>⚡ Энергия</div>
+<div>⚡ Энергия: <span id="energyText">100</span>/100</div>
 <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-<div>📈 Уровень</div>
+<div>📈 Уровень: <span id="level">1</span></div>
 <div class="bar"><div id="levelBar" class="fill"></div></div>
 
 <div id="game">
@@ -94,14 +93,25 @@ if (window.Telegram && Telegram.WebApp) {
     }
 }
 
-// ===== СОХРАНЕНИЕ =====
-let money = localStorage.getItem("money") ? parseInt(localStorage.getItem("money")) : 0;
-let energy = localStorage.getItem("energy") ? parseInt(localStorage.getItem("energy")) : 100;
+// ===== ДАННЫЕ =====
+let money = parseInt(localStorage.getItem("money")) || 0;
+let energy = parseInt(localStorage.getItem("energy")) || 100;
 
-// ===== ОБНОВЛЕНИЕ UI =====
+// уровень считается от денег
+let level = Math.floor(money / 100) + 1;
+
+// ===== UI =====
 function updateUI() {
     document.getElementById("money").innerText = money;
+    document.getElementById("energyText").innerText = energy;
     document.getElementById("energyBar").style.width = energy + "%";
+
+    // уровень
+    level = Math.floor(money / 100) + 1;
+    document.getElementById("level").innerText = level;
+
+    let progress = money % 100;
+    document.getElementById("levelBar").style.width = progress + "%";
 }
 
 updateUI();
@@ -109,14 +119,14 @@ updateUI();
 // ===== КЛИК =====
 const tandoor = document.getElementById("tandoor");
 
-tandoor.addEventListener("click", () => {
+tandoor.addEventListener("click", (e) => {
 
     if (energy <= 0) return;
 
     energy -= 1;
     money += 1;
 
-    // сохраняем
+    // сохранение
     localStorage.setItem("money", money);
     localStorage.setItem("energy", energy);
 
@@ -127,17 +137,15 @@ tandoor.addEventListener("click", () => {
     img.src = "assets/samsa.png";
     img.className = "samsa";
 
-    const rect = tandoor.getBoundingClientRect();
-
-    img.style.left = (rect.left + rect.width/2 - 20) + "px";
-    img.style.top = (rect.top) + "px";
+    img.style.left = (e.clientX - 20) + "px";
+    img.style.top = (e.clientY - 20) + "px";
 
     document.body.appendChild(img);
 
     setTimeout(() => img.remove(), 1000);
 });
 
-// ===== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ =====
+// ===== РЕГЕН ЭНЕРГИИ =====
 setInterval(() => {
     if (energy < 100) {
         energy += 1;
