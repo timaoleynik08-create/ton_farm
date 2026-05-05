@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Samsa Tap</title>
@@ -8,60 +8,65 @@
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial;
-    background: linear-gradient(180deg, #0f172a, #1e3a8a);
-    color: white;
-    text-align: center;
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(180deg, #0f172a, #1e3a8a);
+  color: white;
+  text-align: center;
 }
 
-/* верх */
-.top {
-    margin-top: 20px;
-    font-size: 18px;
+/* имя */
+.player {
+  margin-top: 15px;
+  font-size: 18px;
 }
 
-/* шкала */
+/* баланс */
+.stats {
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+/* полоски */
 .bar {
-    width: 80%;
-    margin: 10px auto;
-    background: #333;
-    border-radius: 10px;
+  width: 80%;
+  height: 10px;
+  background: #222;
+  margin: 5px auto;
+  border-radius: 10px;
+  overflow: hidden;
 }
-.progress {
-    height: 10px;
-    background: lime;
-    width: 0%;
-    border-radius: 10px;
+
+.fill {
+  height: 100%;
+  background: orange;
+  width: 50%;
 }
 
 /* тандыр */
 #tandoor {
   position: fixed;
-  bottom: 80px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
-
-  width: 240px;
-  height: 240px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
-
   background: radial-gradient(circle, #ff7b00, #5a1a00);
+  box-shadow: 0 0 50px orange;
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 80px;
   cursor: pointer;
-  box-shadow: 0 0 60px orange;
-  transition: transform 0.1s;
+  transition: 0.1s;
 }
 
 #tandoor:active {
   transform: translateX(-50%) scale(0.9);
 }
 
-/* самса эффект */
+/* эффект */
 #effect span {
   position: absolute;
   font-size: 30px;
@@ -70,22 +75,22 @@ body {
 
 @keyframes fly {
   0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-120px); opacity: 0; }
+  100% { transform: translateY(-150px); opacity: 0; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="top">
-  👤 <span id="name">Игрок</span><br>
-  💰 Баланс: <span id="balance">0</span><br>
-  ⚡ Энергия: <span id="energy">10</span><br>
-  📈 Уровень: <span id="level">1</span>
-</div>
+<div class="player" id="player">Игрок</div>
 
-<div class="bar">
-  <div id="progress" class="progress"></div>
+<div class="stats">
+💰 Баланс: <span id="balance">0</span><br>
+⚡ Энергия
+<div class="bar"><div id="energyBar" class="fill"></div></div>
+
+📈 Уровень
+<div class="bar"><div id="levelBar" class="fill"></div></div>
 </div>
 
 <div id="tandoor" onclick="tap()">🔥</div>
@@ -93,88 +98,77 @@ body {
 <div id="effect"></div>
 
 <script>
-// Telegram
 let tg = window.Telegram.WebApp;
 tg.expand();
 
+// имя игрока
 let user = tg.initDataUnsafe?.user;
-
-// имя
-let name = localStorage.getItem("name");
-
 if (user) {
-    name = user.first_name;
-} else if (!name) {
-    name = prompt("Введите имя");
+  document.getElementById("player").innerText =
+    user.first_name + (user.last_name ? " " + user.last_name : "");
 }
 
-localStorage.setItem("name", name);
-
 // данные
-let balance = parseInt(localStorage.getItem("balance")) || 0;
-let energy = parseInt(localStorage.getItem("energy")) || 10;
-let level = parseInt(localStorage.getItem("level")) || 1;
-let maxEnergy = parseInt(localStorage.getItem("maxEnergy")) || 10;
+let balance = +localStorage.getItem("balance") || 0;
+let energy = +localStorage.getItem("energy") || 10;
+let level = +localStorage.getItem("level") || 1;
+let maxEnergy = +localStorage.getItem("maxEnergy") || 10;
 
 // обновление
 function updateUI() {
-    document.getElementById("name").innerText = name;
-    document.getElementById("balance").innerText = balance;
-    document.getElementById("energy").innerText = energy;
-    document.getElementById("level").innerText = level;
+  document.getElementById("balance").innerText = balance;
 
-    let progress = (balance % (level * 10)) / (level * 10) * 100;
-    document.getElementById("progress").style.width = progress + "%";
+  document.getElementById("energyBar").style.width =
+    (energy / maxEnergy * 100) + "%";
+
+  document.getElementById("levelBar").style.width =
+    (balance % 10 * 10) + "%";
 }
 
 // сохранение
 function save() {
-    localStorage.setItem("balance", balance);
-    localStorage.setItem("energy", energy);
-    localStorage.setItem("level", level);
-    localStorage.setItem("maxEnergy", maxEnergy);
+  localStorage.setItem("balance", balance);
+  localStorage.setItem("energy", energy);
+  localStorage.setItem("level", level);
+  localStorage.setItem("maxEnergy", maxEnergy);
 }
 
 // тап
 function tap() {
-    if (energy <= 0) return;
+  if (energy <= 0) return;
 
-    balance += 1;
-    energy -= 1;
+  balance++;
+  energy--;
 
-    if (balance >= level * 10) {
-        level += 1;
-        maxEnergy += 2;
-    }
+  if (balance >= level * 10) {
+    level++;
+    maxEnergy += 2;
+  }
 
-    updateUI();
-    save();
-    spawnSamsa();
+  updateUI();
+  save();
+  spawnSamsa();
 }
 
 // эффект самсы
 function spawnSamsa() {
-    const effect = document.getElementById("effect");
+  let el = document.createElement("span");
+  el.innerText = "🥟";
+  el.style.left = Math.random() * 100 + "%";
+  el.style.bottom = "120px";
+  document.getElementById("effect").appendChild(el);
 
-    let el = document.createElement("span");
-    el.innerText = "🥟";
-
-    el.style.left = Math.random() * 100 + "%";
-    el.style.bottom = "120px";
-
-    effect.appendChild(el);
-
-    setTimeout(() => el.remove(), 1000);
+  setTimeout(() => el.remove(), 1000);
 }
 
 // восстановление энергии
 setInterval(() => {
-    if (energy < maxEnergy) {
-        energy += 1;
-        updateUI();
-        save();
-    }
-}, 3000);
+  if (energy < maxEnergy) {
+    energy++;
+    updateUI();
+    save();
+  }
+}, 2000);
 
 // старт
 updateUI();
