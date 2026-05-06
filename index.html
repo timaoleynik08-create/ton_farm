@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>TON Farm</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
+:root{
+    --bg1: #081426;
+    --bg2: #12315f;
+    --card: rgba(255,255,255,0.08);
+    --card2: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.78);
+    --gold1: #ffcb45;
+    --gold2: #ff9f1a;
+    --shadow: rgba(0,0,0,0.35);
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -15,8 +27,7 @@ html, body {
     height: 100%;
     overflow: hidden;
     font-family: Arial, sans-serif;
-    color: white;
-    text-align: center;
+    color: var(--text);
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     background: url("assets/bg.jpg") center center / cover no-repeat fixed;
@@ -24,12 +35,29 @@ html, body {
     padding-bottom: env(safe-area-inset-bottom);
 }
 
-* {
-    box-sizing: border-box;
+* { box-sizing: border-box; }
+
+body::before{
+    content:"";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8,20,38,0.46), rgba(8,20,38,0.16));
+    pointer-events: none;
+}
+
+#effect-layer{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 20;
 }
 
 .top {
+    position: relative;
+    z-index: 5;
     padding: 14px 14px 0;
+    text-align: center;
 }
 
 .name {
@@ -37,31 +65,52 @@ html, body {
     font-weight: 700;
     margin-bottom: 12px;
     line-height: 1.1;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 
 .stat {
     font-size: 18px;
     margin: 10px 0 6px;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 
 .bar {
     width: min(78vw, 520px);
     height: 12px;
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255,255,255,0.18);
     margin: 0 auto 16px;
     border-radius: 999px;
     overflow: hidden;
     backdrop-filter: blur(2px);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
 }
 
 .fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ffb000, #ff8a00);
+    background: linear-gradient(90deg, var(--gold1), var(--gold2));
     border-radius: 999px;
     transition: width 0.15s linear;
+}
+
+.shop-button {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
+    z-index: 50;
+    border: none;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font-size: 16px;
+    padding: 12px 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px var(--shadow);
+    backdrop-filter: blur(10px);
+}
+
+.shop-button:active{
+    transform: scale(0.98);
 }
 
 .game-area {
@@ -72,6 +121,7 @@ html, body {
     display: flex;
     justify-content: center;
     pointer-events: none;
+    z-index: 5;
 }
 
 #tandoor {
@@ -107,8 +157,8 @@ html, body {
 
 #girl {
     position: fixed;
-    right: 6vw;
-    bottom: 28px;
+    right: 5vw;
+    bottom: 30px;
     width: min(32vw, 180px);
     max-width: 180px;
     height: auto;
@@ -117,13 +167,7 @@ html, body {
     pointer-events: none;
     display: none;
     filter: drop-shadow(0 8px 22px rgba(0,0,0,0.35));
-}
-
-#effect-layer {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
+    z-index: 4;
 }
 
 .samsa-fly {
@@ -133,163 +177,191 @@ html, body {
     object-fit: contain;
     animation: flyUp 900ms ease-out forwards;
     will-change: transform, opacity;
+    z-index: 30;
 }
 
 @keyframes flyUp {
-    0% {
-        transform: translateY(0) scale(1) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-160px) scale(0.55) rotate(18deg);
-        opacity: 0;
-    }
-}
-
-.shop-button {
-    position: fixed;
-    top: max(10px, env(safe-area-inset-top));
-    right: 10px;
-    z-index: 20;
-    border: none;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.92);
-    color: #111;
-    font-size: 16px;
-    padding: 10px 14px;
-    font-weight: 700;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-160px) scale(0.55) rotate(18deg); opacity: 0; }
 }
 
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.58);
-    z-index: 100;
     display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.62);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    padding: 18px;
 }
 
 .modal-content {
-    background: rgba(255,255,255,0.97);
-    color: #111;
-    margin: 56px auto 0;
+    width: min(92vw, 430px);
+    border-radius: 28px;
     padding: 18px;
-    width: min(90vw, 420px);
-    border-radius: 18px;
-    box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+    color: white;
+    background: linear-gradient(180deg, rgba(19,40,80,0.98), rgba(9,21,43,0.98));
+    box-shadow: 0 18px 55px rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 14px;
+}
+
+.modal-head h2{
+    margin:0;
+    font-size: 22px;
 }
 
 .close {
-    float: right;
-    font-size: 28px;
-    cursor: pointer;
+    font-size: 30px;
     line-height: 1;
-}
-
-.shop-item {
-    text-align: center;
-    margin-top: 18px;
-}
-
-.shop-item img {
-    width: 120px;
-    max-width: 100%;
-    margin-bottom: 10px;
-}
-
-.shop-item button {
-    margin: 6px;
-    padding: 10px 14px;
-    font-size: 15px;
     cursor: pointer;
-    border: none;
-    border-radius: 12px;
-    background: #1f7aff;
-    color: white;
-    font-weight: 700;
+    color: rgba(255,255,255,0.82);
+    user-select:none;
 }
 
-.shop-item button:disabled {
-    background: #b7c3d6;
-    color: #566070;
+.shop-card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.shop-preview{
+    width: 100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom: 12px;
+}
+
+.shop-preview img{
+    width: 160px;
+    max-width: 100%;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.25));
+    user-select:none;
+}
+
+.shop-title{
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-align:center;
+}
+
+.shop-meta{
+    text-align:center;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+}
+
+.shop-actions{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.shop-actions button{
+    width:100%;
+    padding: 14px 14px;
+    border:none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor:pointer;
+    color:white;
+}
+
+.primary-btn{
+    background: linear-gradient(90deg, #ffb000, #ff8a00);
+    box-shadow: 0 10px 24px rgba(255,153,0,0.25);
+}
+
+.secondary-btn{
+    background: rgba(255,255,255,0.12);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.secondary-btn:disabled,
+.primary-btn:disabled{
+    opacity: 0.45;
     cursor: not-allowed;
 }
 
-.shop-meta {
-    margin-top: 6px;
-    font-size: 15px;
-    line-height: 1.4;
-}
-
 @media (max-height: 700px) {
-    .name {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-    .stat {
-        font-size: 16px;
-        margin: 8px 0 5px;
-    }
-    .bar {
-        margin-bottom: 12px;
-    }
-    #girl {
-        width: min(28vw, 150px);
-        right: 3vw;
-        bottom: 18px;
-    }
+    .name { font-size: 24px; margin-bottom: 10px; }
+    .stat { font-size: 16px; margin: 8px 0 5px; }
+    .bar { margin-bottom: 12px; }
+    #girl { width: min(28vw, 150px); right: 3vw; bottom: 18px; }
 }
-
 @media (max-width: 430px) {
-    #girl {
-        width: min(30vw, 145px);
-    }
+    #girl { width: min(30vw, 145px); }
 }
 </style>
 </head>
 
 <body>
-    <button class="shop-button" id="shopBtn">🛒 Магазин</button>
+<button class="shop-button" id="shopBtn">🛒 Магазин</button>
 
-    <div class="top">
-        <div class="name" id="playerName">Игрок</div>
+<div class="top">
+    <div class="name" id="playerName">Игрок</div>
 
-        <div class="stat">💰 Баланс: <span id="balance">0</span></div>
+    <div class="stat">💰 Баланс: <span id="balance">0</span></div>
 
-        <div class="stat">⚡ Энергия: <span id="energyText">10/10</span></div>
-        <div class="bar"><div id="energyBar" class="fill"></div></div>
+    <div class="stat">⚡ Энергия: <span id="energyText">10/10</span></div>
+    <div class="bar"><div id="energyBar" class="fill"></div></div>
 
-        <div class="stat">📈 Уровень: <span id="levelText">1</span></div>
-        <div class="bar"><div id="levelBar" class="fill"></div></div>
-    </div>
+    <div class="stat">📈 Уровень: <span id="levelText">1</span></div>
+    <div class="bar"><div id="levelBar" class="fill"></div></div>
+</div>
 
-    <div id="effect-layer"></div>
+<div id="effect-layer"></div>
 
-    <div class="game-area">
-        <button id="tandoor" aria-label="Tandoor tap">
-            <img src="assets/tandoor.png" alt="tandoor">
-        </button>
-    </div>
+<div class="game-area">
+    <button id="tandoor" aria-label="Tandoor tap">
+        <img src="assets/tandoor.png" alt="tandoor">
+    </button>
+</div>
 
-    <img id="girl" src="" alt="girl">
+<img id="girl" src="" alt="girl">
 
-    <div id="shopModal" class="modal">
-        <div class="modal-content">
-            <span id="closeModal" class="close">&times;</span>
-            <h3 style="margin-top:0">Магазин</h3>
+<div id="shopModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <h2>🛒 Магазин</h2>
+            <div class="close" id="closeModal">&times;</div>
+        </div>
 
-            <div class="shop-item">
+        <div class="shop-card">
+            <div class="shop-preview">
                 <img id="itemGirlImg" src="assets/girl1.png" alt="girl item">
-                <div class="shop-meta">
-                    Девушка-помощница<br>
-                    Уровень: <span id="girlLevelDisplay">0</span><br>
-                    Цена: <span id="girlPrice">1000</span> самс
-                </div>
-                <button id="buyGirlBtn">Купить</button>
-                <button id="upgradeGirlBtn" style="display:none;">Улучшить</button>
+            </div>
+
+            <div class="shop-title">Девушка-помощница</div>
+
+            <div class="shop-meta">
+                Уровень: <span id="girlLevelDisplay">0</span>/10<br>
+                Доход: +<span id="girlIncomeDisplay">0</span> самс/сек<br>
+                Цена: <span id="girlPrice">1000</span> самс
+            </div>
+
+            <div class="shop-actions">
+                <button id="buyGirlBtn" class="primary-btn">Купить</button>
+                <button id="upgradeGirlBtn" class="secondary-btn" style="display:none;">Улучшить</button>
             </div>
         </div>
     </div>
+</div>
 
 <script>
 (() => {
@@ -311,6 +383,7 @@ html, body {
     const upgradeGirlBtn = document.getElementById('upgradeGirlBtn');
     const girlLevelDisplay = document.getElementById('girlLevelDisplay');
     const girlPriceDisplay = document.getElementById('girlPrice');
+    const girlIncomeDisplay = document.getElementById('girlIncomeDisplay');
     const itemGirlImg = document.getElementById('itemGirlImg');
 
     const STORAGE_KEYS = {
@@ -388,6 +461,7 @@ html, body {
 
     function refreshGirlUI() {
         girlLevelDisplay.textContent = girlLevel;
+        girlIncomeDisplay.textContent = girlLevel > 0 ? girlIncome[girlLevel] : 0;
 
         if (!girlBought) {
             buyGirlBtn.style.display = 'inline-block';
@@ -425,7 +499,6 @@ html, body {
         img.style.left = `${Math.max(0, x - 21)}px`;
         img.style.top = `${Math.max(0, y - 21)}px`;
         effectLayer.appendChild(img);
-
         setTimeout(() => img.remove(), 950);
     }
 
@@ -434,7 +507,6 @@ html, body {
 
         balance += 1;
         energy -= 1;
-
         lastTimestamp = Date.now();
         saveGame();
         updateUI();
@@ -458,7 +530,8 @@ html, body {
     }, { passive: false });
 
     shopBtn.addEventListener('click', () => {
-        shopModal.style.display = 'block';
+        shopModal.style.display = 'flex';
+        refreshGirlUI();
     });
 
     closeModal.addEventListener('click', () => {
@@ -528,7 +601,7 @@ html, body {
             updateUI();
             saveGame();
         }
-    }, 2500);
+    }, 1000);
 
     setInterval(autoIncomeTick, 1000);
 
