@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>TON Farm</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -93,10 +93,10 @@ body::before{
     transition: width 0.15s linear;
 }
 
-.shop-button {
+.shop-button,
+.music-button {
     position: fixed;
     top: max(10px, env(safe-area-inset-top));
-    right: 10px;
     z-index: 50;
     border: none;
     border-radius: 16px;
@@ -109,7 +109,11 @@ body::before{
     backdrop-filter: blur(10px);
 }
 
-.shop-button:active{
+.shop-button { right: 10px; }
+.music-button { left: 10px; }
+
+.shop-button:active,
+.music-button:active{
     transform: scale(0.98);
 }
 
@@ -311,7 +315,12 @@ body::before{
 </head>
 
 <body>
+<button class="music-button" id="musicBtn">🔊</button>
 <button class="shop-button" id="shopBtn">🛒 Магазин</button>
+
+<audio id="bgMusic" loop>
+    <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
 
 <div class="top">
     <div class="name" id="playerName">Игрок</div>
@@ -377,6 +386,9 @@ body::before{
     const effectLayer = document.getElementById('effect-layer');
 
     const shopBtn = document.getElementById('shopBtn');
+    const musicBtn = document.getElementById('musicBtn');
+    const bgMusic = document.getElementById('bgMusic');
+
     const shopModal = document.getElementById('shopModal');
     const closeModal = document.getElementById('closeModal');
     const buyGirlBtn = document.getElementById('buyGirlBtn');
@@ -392,17 +404,21 @@ body::before{
         name: 'tonfarm_name',
         girlBought: 'tonfarm_girlBought',
         girlLevel: 'tonfarm_girlLevel',
-        lastTimestamp: 'tonfarm_lastTimestamp'
+        lastTimestamp: 'tonfarm_lastTimestamp',
+        music: 'tonfarm_music'
     };
 
     const girlPrices = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
-    const girlIncome = [0, 1, 2, 4, 8, 16, 25, 35, 40, 45, 50];
+    const girlIncome = [0, 1, 3, 6, 10, 15, 22, 30, 40, 55, 75];
 
     let balance = parseInt(localStorage.getItem(STORAGE_KEYS.balance) || '0', 10);
     let energy = parseInt(localStorage.getItem(STORAGE_KEYS.energy) || '10', 10);
     let girlBought = localStorage.getItem(STORAGE_KEYS.girlBought) === 'true';
     let girlLevel = parseInt(localStorage.getItem(STORAGE_KEYS.girlLevel) || '0', 10);
     let lastTimestamp = parseInt(localStorage.getItem(STORAGE_KEYS.lastTimestamp) || String(Date.now()), 10);
+
+    let musicEnabled = localStorage.getItem(STORAGE_KEYS.music);
+    musicEnabled = musicEnabled === null ? true : musicEnabled === 'on';
 
     function getLevel(currentBalance) {
         return Math.floor(currentBalance / 10) + 1;
@@ -422,6 +438,22 @@ body::before{
         localStorage.setItem(STORAGE_KEYS.girlBought, String(girlBought));
         localStorage.setItem(STORAGE_KEYS.girlLevel, String(girlLevel));
         localStorage.setItem(STORAGE_KEYS.lastTimestamp, String(lastTimestamp));
+    }
+
+    function setMusicState(enabled) {
+        musicEnabled = enabled;
+        localStorage.setItem(STORAGE_KEYS.music, enabled ? 'on' : 'off');
+        musicBtn.textContent = enabled ? '🔊' : '🔇';
+
+        if (!enabled) {
+            bgMusic.pause();
+        }
+    }
+
+    function tryStartMusic() {
+        if (!musicEnabled) return;
+        bgMusic.volume = 0.35;
+        bgMusic.play().catch(() => {});
     }
 
     function updateUI() {
@@ -516,6 +548,7 @@ body::before{
         const y = event?.clientY ?? (rect.top + rect.height / 2);
 
         spawnSamsa(x, y);
+        tryStartMusic();
     }
 
     tandoorEl.addEventListener('click', (e) => {
@@ -532,6 +565,7 @@ body::before{
     shopBtn.addEventListener('click', () => {
         shopModal.style.display = 'flex';
         refreshGirlUI();
+        tryStartMusic();
     });
 
     closeModal.addEventListener('click', () => {
@@ -551,6 +585,7 @@ body::before{
             saveGame();
             updateUI();
             refreshGirlUI();
+            tryStartMusic();
         }
     });
 
@@ -565,6 +600,7 @@ body::before{
             saveGame();
             updateUI();
             refreshGirlUI();
+            tryStartMusic();
         }
     });
 
@@ -589,10 +625,24 @@ body::before{
         }
     }
 
+    musicBtn.addEventListener('click', () => {
+        if (bgMusic.paused) {
+            setMusicState(true);
+            tryStartMusic();
+        } else {
+            setMusicState(false);
+        }
+    });
+
     setPlayerName();
     applyOfflineIncome();
     updateUI();
     refreshGirlUI();
+    setMusicState(musicEnabled);
+
+    if (musicEnabled) {
+        document.body.addEventListener('pointerdown', tryStartMusic, { once: true });
+    }
 
     setInterval(() => {
         const maxEnergy = getMaxEnergy(getLevel(balance));
