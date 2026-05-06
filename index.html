@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
 <title>TON Farm</title>
 
 <style>
@@ -19,6 +18,8 @@ html, body {
     text-align: center;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 * {
@@ -26,13 +27,14 @@ html, body {
 }
 
 .top {
-    padding: 18px 14px 0;
+    padding: 14px 14px 0;
 }
 
 .name {
     font-size: 30px;
     font-weight: 700;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
+    line-height: 1.1;
 }
 
 .stat {
@@ -43,7 +45,7 @@ html, body {
 .bar {
     width: min(78vw, 520px);
     height: 12px;
-    background: rgba(255,255,255,0.16);
+    background: rgba(255, 255, 255, 0.16);
     margin: 0 auto 16px;
     border-radius: 999px;
     overflow: hidden;
@@ -77,11 +79,25 @@ html, body {
     touch-action: manipulation;
     cursor: pointer;
     transition: transform 0.08s ease;
-    filter: drop-shadow(0 0 28px rgba(255, 170, 0, 0.28));
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
 }
 
 #tandoor:active {
     transform: scale(0.95);
+}
+
+#tandoor img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: drop-shadow(0 0 34px rgba(255, 140, 0, 0.35));
 }
 
 #effect-layer {
@@ -142,7 +158,9 @@ html, body {
     <div id="effect-layer"></div>
 
     <div class="game-area">
-        <img id="tandoor" src="assets/tandoor.png" alt="tandoor">
+        <button id="tandoor" aria-label="Tandoor tap">
+            <img src="assets/tandoor.png" alt="tandoor">
+        </button>
     </div>
 
 <script>
@@ -165,8 +183,6 @@ html, body {
     let balance = parseInt(localStorage.getItem(STORAGE_KEYS.balance) || '0', 10);
     let energy = parseInt(localStorage.getItem(STORAGE_KEYS.energy) || '10', 10);
 
-    let maxEnergy = 10;
-
     function getLevel(currentBalance) {
         return Math.floor(currentBalance / 10) + 1;
     }
@@ -187,7 +203,7 @@ html, body {
     function updateUI() {
         const level = getLevel(balance);
         const progress = getLevelProgress(balance);
-        maxEnergy = getMaxEnergy(level);
+        const maxEnergy = getMaxEnergy(level);
 
         if (energy > maxEnergy) energy = maxEnergy;
 
@@ -209,7 +225,6 @@ html, body {
                 if (user) {
                     const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
                     playerNameEl.textContent = fullName || 'Игрок';
-
                     localStorage.setItem(STORAGE_KEYS.name, fullName || 'Игрок');
                     return;
                 }
@@ -217,22 +232,17 @@ html, body {
         } catch (e) {}
 
         const savedName = localStorage.getItem(STORAGE_KEYS.name);
-        if (savedName) {
-            playerNameEl.textContent = savedName;
-        }
+        if (savedName) playerNameEl.textContent = savedName;
     }
 
-    function spawnSamsa(clientX, clientY) {
+    function spawnSamsa(x, y) {
         const img = document.createElement('img');
         img.src = 'assets/samsa.png';
         img.className = 'samsa-fly';
 
         const size = 42;
-        const x = Math.max(0, clientX - size / 2);
-        const y = Math.max(0, clientY - size / 2);
-
-        img.style.left = `${x}px`;
-        img.style.top = `${y}px`;
+        img.style.left = `${Math.max(0, x - size / 2)}px`;
+        img.style.top = `${Math.max(0, y - size / 2)}px`;
 
         effectLayer.appendChild(img);
 
@@ -251,25 +261,23 @@ html, body {
         updateUI();
 
         const rect = tandoorEl.getBoundingClientRect();
-        const cx = event?.clientX ?? (rect.left + rect.width / 2);
-        const cy = event?.clientY ?? (rect.top + rect.height / 2);
+        const x = event?.clientX ?? (rect.left + rect.width / 2);
+        const y = event?.clientY ?? (rect.top + rect.height / 2);
 
-        spawnSamsa(cx, cy);
+        spawnSamsa(x, y);
     }
 
-    tandoorEl.addEventListener('click', tap);
-    tandoorEl.addEventListener('touchend', function (e) {
+    tandoorEl.addEventListener('pointerup', (e) => {
         e.preventDefault();
-        const touch = e.changedTouches && e.changedTouches[0];
-        tap(touch || e);
-    }, { passive: false });
+        tap(e);
+    });
 
     setPlayerName();
     updateUI();
 
     setInterval(() => {
         const level = getLevel(balance);
-        maxEnergy = getMaxEnergy(level);
+        const maxEnergy = getMaxEnergy(level);
 
         if (energy < maxEnergy) {
             energy += 1;
