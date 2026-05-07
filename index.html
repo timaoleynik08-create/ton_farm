@@ -205,31 +205,57 @@ body::before{
 
 .modal-content{
     width:min(92vw,430px);
+    max-height:min(86vh,760px);
     border-radius:28px;
-    padding:18px;
     color:white;
     background:linear-gradient(180deg, rgba(19,40,80,.98), rgba(9,21,43,.98));
     border:1px solid rgba(255,255,255,.08);
     box-shadow:0 18px 55px rgba(0,0,0,.45);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
 }
 
 .modal-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:14px;
+    gap:10px;
+    padding:18px 18px 12px;
+    flex:0 0 auto;
 }
 
-.modal-head h2{
-    margin:0;
+.modal-title{
+    flex:1;
+    text-align:center;
     font-size:22px;
+    font-weight:700;
 }
 
-.close{
-    font-size:30px;
+.modal-back,
+.modal-close{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:14px;
+    background:rgba(255,255,255,.12);
+    color:white;
+    font-size:16px;
+    font-weight:700;
     cursor:pointer;
-    line-height:1;
-    user-select:none;
+    flex:0 0 auto;
+}
+
+.modal-back:active,
+.modal-close:active{
+    transform:scale(.98);
+}
+
+.modal-body{
+    padding:0 18px 18px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    flex:1 1 auto;
 }
 
 .shop-card, .task-card, .profile-box{
@@ -420,26 +446,29 @@ body::before{
 <div id="shopModal" class="modal">
     <div class="modal-content">
         <div class="modal-head">
-            <h2>Магазин</h2>
-            <div class="close" id="closeModal">×</div>
+            <button class="modal-back" id="closeModal" type="button">←</button>
+            <div class="modal-title">Магазин</div>
+            <button class="modal-close" type="button" onclick="document.getElementById('shopModal').style.display='none'">×</button>
         </div>
 
-        <div class="shop-card">
-            <div class="shop-preview">
-                <img id="itemGirlImg" src="assets/girl1.png" alt="girl item">
-            </div>
+        <div class="modal-body">
+            <div class="shop-card">
+                <div class="shop-preview">
+                    <img id="itemGirlImg" src="assets/girl1.png" alt="girl item">
+                </div>
 
-            <div class="shop-title">Девушка-помощница</div>
+                <div class="shop-title">Девушка-помощница</div>
 
-            <div class="shop-meta">
-                Уровень: <span id="girlLevelDisplay">0</span>/10<br>
-                Доход: +<span id="girlIncomeDisplay">1</span>/сек<br>
-                Цена: <span id="girlPrice">1000</span>
-            </div>
+                <div class="shop-meta">
+                    Уровень: <span id="girlLevelDisplay">0</span>/10<br>
+                    Доход: +<span id="girlIncomeDisplay">1</span>/сек<br>
+                    Цена: <span id="girlPrice">1000</span>
+                </div>
 
-            <div class="shop-actions">
-                <button id="buyGirlBtn" class="primary-btn">Купить</button>
-                <button id="upgradeGirlBtn" class="secondary-btn" style="display:none;">Улучшить</button>
+                <div class="shop-actions">
+                    <button id="buyGirlBtn" class="primary-btn">Купить</button>
+                    <button id="upgradeGirlBtn" class="secondary-btn" style="display:none;">Улучшить</button>
+                </div>
             </div>
         </div>
     </div>
@@ -449,17 +478,20 @@ body::before{
 <div id="tasksModal" class="modal">
     <div class="modal-content">
         <div class="modal-head">
-            <h2>Задания</h2>
-            <div class="close" id="closeTasks">×</div>
+            <button class="modal-back" id="closeTasks" type="button">←</button>
+            <div class="modal-title">Задания</div>
+            <button class="modal-close" type="button" onclick="document.getElementById('tasksModal').style.display='none'">×</button>
         </div>
 
-        <div id="dailyBonusCard" class="task-card daily-card">
-            <div class="task-title">📅 Ежедневный бонус</div>
-            <div class="task-progress" id="dailyBonusInfo">Забери награду за вход</div>
-            <button class="daily-btn primary-btn" id="dailyClaimBtn">Получить</button>
-        </div>
+        <div class="modal-body">
+            <div id="dailyBonusCard" class="task-card daily-card">
+                <div class="task-title">📅 Ежедневный бонус</div>
+                <div class="task-progress" id="dailyBonusInfo">Забери награду за вход</div>
+                <button class="daily-btn primary-btn" id="dailyClaimBtn">Получить</button>
+            </div>
 
-        <div id="tasksContainer"></div>
+            <div id="tasksContainer"></div>
+        </div>
     </div>
 </div>
 
@@ -467,27 +499,30 @@ body::before{
 <div id="profileModal" class="modal">
     <div class="modal-content">
         <div class="modal-head">
-            <h2>Профиль</h2>
-            <div class="close" id="closeProfile">×</div>
+            <button class="modal-back" id="closeProfile" type="button">←</button>
+            <div class="modal-title">Профиль</div>
+            <button class="modal-close" type="button" onclick="document.getElementById('profileModal').style.display='none'">×</button>
         </div>
 
-        <div class="profile-box">
-            <label for="avatarInput">
-                <img id="profileAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
-            </label>
+        <div class="modal-body">
+            <div class="profile-box">
+                <label for="avatarInput">
+                    <img id="profileAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
+                </label>
 
-            <input type="file" id="avatarInput" accept="image/*" hidden>
+                <input type="file" id="avatarInput" accept="image/*" hidden>
 
-            <div class="profile-name" id="profileName">Игрок</div>
+                <div class="profile-name" id="profileName">Игрок</div>
 
-            <div class="profile-stat">💰 Баланс: <span id="profileBalance">0</span></div>
-            <div class="profile-stat">📈 Уровень: <span id="profileLevel">1</span></div>
-            <div class="profile-stat">👆 Тапов: <span id="profileTaps">0</span></div>
-            <div class="profile-stat">🆔 Код: <span id="profileId"></span></div>
+                <div class="profile-stat">💰 Баланс: <span id="profileBalance">0</span></div>
+                <div class="profile-stat">📈 Уровень: <span id="profileLevel">1</span></div>
+                <div class="profile-stat">👆 Тапов: <span id="profileTaps">0</span></div>
+                <div class="profile-stat">🆔 Код: <span id="profileId"></span></div>
 
-            <div class="invite-row">
-                <input id="inviteLink" readonly>
-                <button class="copy-btn" id="copyInviteBtn">Копировать</button>
+                <div class="invite-row">
+                    <input id="inviteLink" readonly>
+                    <button class="copy-btn" id="copyInviteBtn">Копировать</button>
+                </div>
             </div>
         </div>
     </div>
@@ -496,7 +531,7 @@ body::before{
 <script>
 (() => {
     const SAVE_KEY = "tonfarm_save";
-    const BOT_USERNAME = "YOUR_BOT_USERNAME"; // заменишь на username своего бота
+    const BOT_USERNAME = "YOUR_BOT_USERNAME"; // замени на username своего бота
 
     const DEFAULT_STATE = {
         balance: 0,
@@ -552,12 +587,12 @@ body::before{
         return { ...DEFAULT_STATE, ...legacy };
     }
 
-    let state = loadState();
-    if (!state.playerId) state.playerId = makeId();
-
     const girlPrices = [0,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000];
     const girlIncome = [0,1,2,4,7,12,18,26,38,52,75];
     const dailyRewards = [100,250,500,800,1200,2500,5000];
+
+    let state = loadState();
+    if (!state.playerId) state.playerId = makeId();
 
     const balanceEl = document.getElementById("balance");
     const energyTextEl = document.getElementById("energyText");
@@ -603,6 +638,26 @@ body::before{
     const inviteLink = document.getElementById("inviteLink");
     const copyInviteBtn = document.getElementById("copyInviteBtn");
 
+    let balance = state.balance || 0;
+    let energy = state.energy || 10;
+    let girlBought = !!state.girlBought;
+    let girlLevel = state.girlLevel || 0;
+    let totalTaps = state.totalTaps || 0;
+    let spentEnergy = state.spentEnergy || 0;
+    let tasksClaimed = Array.isArray(state.tasksClaimed) ? state.tasksClaimed : [];
+    let avatar = state.avatar || "";
+    let musicEnabled = state.music !== false;
+    let playerId = state.playerId || makeId();
+    let referrer = state.referrer || "";
+    let dailyStreak = state.dailyStreak || 0;
+    let lastDailyClaim = state.lastDailyClaim || "";
+    let startParam = state.startParam || "";
+    let openShopCount = state.openShopCount || 0;
+
+    if (avatar) profileAvatar.src = avatar;
+
+    let tasks = [];
+
     function todayKey(date = new Date()) {
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -617,7 +672,7 @@ body::before{
     }
 
     function getLevel() {
-        return Math.floor(state.balance / 10) + 1;
+        return Math.floor(balance / 10) + 1;
     }
 
     function getMaxEnergy() {
@@ -643,25 +698,9 @@ body::before{
         localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     }
 
-    let balance = state.balance || 0;
-    let energy = state.energy || 10;
-    let girlBought = !!state.girlBought;
-    let girlLevel = state.girlLevel || 0;
-    let totalTaps = state.totalTaps || 0;
-    let spentEnergy = state.spentEnergy || 0;
-    let tasksClaimed = Array.isArray(state.tasksClaimed) ? state.tasksClaimed : [];
-    let avatar = state.avatar || "";
-    let musicEnabled = state.music !== false;
-    let playerId = state.playerId || makeId();
-    let referrer = state.referrer || "";
-    let dailyStreak = state.dailyStreak || 0;
-    let lastDailyClaim = state.lastDailyClaim || "";
-    let startParam = state.startParam || "";
-    let openShopCount = state.openShopCount || 0;
-
-    if (avatar) profileAvatar.src = avatar;
-
-    let tasks = [];
+    function saveGame() {
+        syncState();
+    }
 
     function buildTasks() {
         tasks = [];
@@ -727,12 +766,6 @@ body::before{
         );
     }
 
-    buildTasks();
-
-    function saveGame() {
-        syncState();
-    }
-
     function updateUI() {
         const level = getLevel();
         const maxEnergy = getMaxEnergy();
@@ -764,7 +797,6 @@ body::before{
                 const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
                 playerNameEl.innerText = fullName || "Игрок";
                 profileName.innerText = fullName || "Игрок";
-                state.referrer = state.referrer || "";
             }
 
             const sp = Telegram.WebApp.initDataUnsafe?.start_param;
@@ -775,9 +807,7 @@ body::before{
         }
 
         profileId.innerText = playerId;
-
-        const link = `https://t.me/${BOT_USERNAME}?startapp=${playerId}`;
-        inviteLink.value = link;
+        inviteLink.value = `https://t.me/${BOT_USERNAME}?startapp=${playerId}`;
     }
 
     function renderGirlUI() {
@@ -854,7 +884,7 @@ body::before{
             case "energy": return spentEnergy;
             case "girl": return girlLevel;
             case "daily": return dailyStreak;
-            case "ref": return 0; // заглушка для будущего backend
+            case "ref": return 0;
             default: return 0;
         }
     }
@@ -967,7 +997,7 @@ body::before{
 
     // Магазин
     shopBtn.onclick = () => {
-        state.openShopCount = (state.openShopCount || 0) + 1;
+        openShopCount = (openShopCount || 0) + 1;
         saveGame();
         renderGirlUI();
         openModal(shopModal);
@@ -1023,6 +1053,7 @@ body::before{
             avatar = reader.result;
             profileAvatar.src = avatar;
             saveGame();
+            updateProfile();
         };
         reader.readAsDataURL(file);
     };
@@ -1050,6 +1081,7 @@ body::before{
 
     // Инициализация Telegram
     setPlayerName();
+    buildTasks();
     updateUI();
     renderGirlUI();
     renderDailyBonus();
@@ -1075,7 +1107,7 @@ body::before{
     // Доход девушки
     setInterval(autoIncomeTick, 1000);
 
-    // Мягкая защита от двойного тапа/зумов
+    // Мягкая защита от зумов
     document.addEventListener("gesturestart", e => e.preventDefault());
     document.addEventListener("dblclick", e => e.preventDefault());
 })();
