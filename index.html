@@ -37,11 +37,7 @@ body::before{
     content:"";
     position:fixed;
     inset:0;
-    background:linear-gradient(
-        180deg,
-        rgba(0,0,0,.35),
-        rgba(0,0,0,.15)
-    );
+    background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.15));
     pointer-events:none;
 }
 
@@ -62,6 +58,7 @@ body::before{
 .stat{
     font-size:18px;
     margin:10px 0 6px;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);
 }
 
 .bar{
@@ -93,7 +90,7 @@ body::before{
     padding:12px 14px;
     font-weight:700;
     backdrop-filter:blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter:blur(10px);
 }
 
 .shop-button{
@@ -121,7 +118,9 @@ body::before{
     border:none;
     padding:0;
     cursor:pointer;
-    touch-action: manipulation;
+    touch-action:manipulation;
+    position:relative;
+    z-index:6;
 }
 
 #tandoor img{
@@ -136,12 +135,13 @@ body::before{
 
 #girl{
     position:fixed;
-    right:5vw;
-    bottom:30px;
-    width:min(32vw,180px);
-    max-width:180px;
+    left:50%;
+    bottom:98px;
+    transform:translateX(-50%);
+    width:min(78vw,360px);
+    max-width:360px;
     display:none;
-    z-index:4;
+    z-index:3;
     pointer-events:none;
     user-select:none;
     -webkit-user-drag:none;
@@ -191,11 +191,7 @@ body::before{
     border-radius:28px;
     padding:18px;
     color:white;
-    background:linear-gradient(
-        180deg,
-        rgba(19,40,80,.98),
-        rgba(9,21,43,.98)
-    );
+    background:linear-gradient(180deg, rgba(19,40,80,.98), rgba(9,21,43,.98));
 }
 
 .modal-head{
@@ -285,9 +281,14 @@ body::before{
     }
 
     #girl{
-        width:min(28vw,150px);
-        right:3vw;
-        bottom:18px;
+        width:min(82vw,320px);
+        bottom:88px;
+    }
+}
+
+@media (max-width:430px){
+    #girl{
+        width:min(84vw,330px);
     }
 }
 </style>
@@ -381,15 +382,8 @@ body::before{
 
     const itemGirlImg = document.getElementById('itemGirlImg');
 
-    const girlPrices = [
-        0, 1000, 2000, 5000, 10000, 20000,
-        50000, 100000, 200000, 500000, 1000000
-    ];
-
-    const girlIncome = [
-        0, 1, 2, 4, 7, 12,
-        18, 26, 38, 52, 75
-    ];
+    const girlPrices = [0, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
+    const girlIncome = [0, 1, 2, 4, 7, 12, 18, 26, 38, 52, 75];
 
     let balance = parseInt(localStorage.getItem("balance")) || 0;
     let energy = parseInt(localStorage.getItem("energy")) || 10;
@@ -441,12 +435,12 @@ body::before{
 
     function refreshGirlUI() {
         girlLevelDisplay.innerText = girlLevel;
+        girlIncomeDisplay.innerText = girlLevel > 0 ? girlIncome[girlLevel] : 0;
 
         if (!girlBought) {
             buyGirlBtn.style.display = "block";
             upgradeGirlBtn.style.display = "none";
             girlPriceDisplay.innerText = girlPrices[1];
-            girlIncomeDisplay.innerText = girlIncome[1];
             itemGirlImg.src = "assets/girl1.png";
         } else {
             buyGirlBtn.style.display = "none";
@@ -461,7 +455,6 @@ body::before{
                 girlPriceDisplay.innerText = "MAX";
             }
 
-            girlIncomeDisplay.innerText = girlLevel > 0 ? girlIncome[girlLevel] : girlIncome[1];
             itemGirlImg.src = `assets/girl${girlLevel}.png`;
         }
 
@@ -481,7 +474,9 @@ body::before{
         img.style.top = (y - 21) + "px";
         effectLayer.appendChild(img);
 
-        setTimeout(() => img.remove(), 900);
+        setTimeout(() => {
+            img.remove();
+        }, 900);
     }
 
     function tryStartMusic() {
@@ -499,10 +494,7 @@ body::before{
         updateUI();
         saveGame();
 
-        const x = event.clientX || window.innerWidth / 2;
-        const y = event.clientY || window.innerHeight / 2;
-        spawnSamsa(x, y);
-
+        spawnSamsa(event.clientX, event.clientY);
         tryStartMusic();
     }
 
