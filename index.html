@@ -1,80 +1,394 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
 <title>TON Farm</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
-:root{--text:#fff;--gold1:#ffcb45;--gold2:#ff9f1a;}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;color:var(--text);
+:root{
+    --text:#fff;
+    --gold1:#ffcb45;
+    --gold2:#ff9f1a;
+    --panel: rgba(255,255,255,.12);
+    --panel2: rgba(255,255,255,.08);
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    color:var(--text);
     background:url("assets/bg.jpg") center center / cover no-repeat fixed;
-    padding-top: env(safe-area-inset-top);padding-bottom: env(safe-area-inset-bottom);
+    touch-action:manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
-*{box-sizing:border-box;}
-body::before{content:"";position:fixed;inset:0;
-    background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15));pointer-events:none;
+
+*{ box-sizing:border-box; }
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.34), rgba(0,0,0,.14));
+    pointer-events:none;
 }
-.top{position:relative;z-index:5;padding:14px 14px 0;text-align:center;}
-.name{font-size:28px;font-weight:700;margin-bottom:12px;text-shadow:0 2px 10px rgba(0,0,0,.4);}
-.stat{font-size:18px;margin:10px 0 6px;text-shadow:0 2px 10px rgba(0,0,0,.4);}
-.bar{width:min(78vw,520px);height:12px;background:rgba(255,255,255,.18);margin:0 auto 16px;border-radius:999px;overflow:hidden;}
-.fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold1),var(--gold2));border-radius:999px;}
-.shop-button,.music-button,.tasks-button,.profile-button{
-    position:fixed;top:10px;z-index:50;
-    border:none;border-radius:16px;background:rgba(255,255,255,.12);
-    color:white;font-size:16px;padding:12px 14px;font-weight:700;
-    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+
+.controls{
+    position:fixed;
+    top:max(10px, env(safe-area-inset-top));
+    left:10px;
+    right:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    z-index:60;
 }
-.music-button{left:10px;}
-.tasks-button{left:80px;}
-.profile-button{right:150px;}
-.shop-button{right:10px;}
-.game-area{position:fixed;left:0;right:0;bottom:24px;display:flex;justify-content:center;z-index:5;}
-#tandoor{width:min(64vw,280px);max-width:280px;background:none;border:none;padding:0;cursor:pointer;touch-action:manipulation;position:relative;z-index:6;}
-#tandoor img{width:100%;object-fit:contain;display:block;}
-#tandoor:active{transform:scale(.95);}
-#girl{position:fixed;left:50%;bottom:98px;transform:translateX(-50%);width:min(78vw,360px);max-width:360px;display:none;z-index:3;pointer-events:none;user-select:none;-webkit-user-drag:none;}
-#effect-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20;}
-.samsa-fly{position:absolute;width:42px;height:42px;animation:flyUp .9s ease-out forwards;}
+
+.spacer{ flex:1; }
+
+.control-btn{
+    width:50px;
+    height:50px;
+    border:none;
+    border-radius:16px;
+    background:rgba(255,255,255,.12);
+    color:white;
+    font-size:20px;
+    font-weight:700;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 8px 20px rgba(0,0,0,.20);
+    cursor:pointer;
+}
+
+.control-btn:active{
+    transform:scale(.98);
+}
+
+.shop-control{
+    width:92px;
+    font-size:16px;
+}
+
+.top{
+    position:relative;
+    z-index:5;
+    padding:78px 14px 0;
+    text-align:center;
+}
+
+.name{
+    font-size:clamp(24px, 7vw, 34px);
+    font-weight:700;
+    margin:0 auto 12px;
+    max-width:78vw;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+
+.stat{
+    font-size:18px;
+    margin:10px 0 6px;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+
+.bar{
+    width:min(78vw, 520px);
+    height:12px;
+    background:rgba(255,255,255,.18);
+    margin:0 auto 16px;
+    border-radius:999px;
+    overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
+.fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold1),var(--gold2));
+    border-radius:999px;
+}
+
+.game-area{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:18px;
+    display:flex;
+    justify-content:center;
+    z-index:5;
+}
+
+#tandoor{
+    width:min(68vw,300px);
+    max-width:300px;
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    touch-action:manipulation;
+    position:relative;
+    z-index:6;
+    filter:drop-shadow(0 0 34px rgba(255, 140, 0, 0.30));
+}
+
+#tandoor img{
+    width:100%;
+    display:block;
+    object-fit:contain;
+}
+
+#tandoor:active{
+    transform:scale(.95);
+}
+
+#girl{
+    position:fixed;
+    left:50%;
+    bottom:98px;
+    transform:translateX(-50%);
+    width:min(84vw,380px);
+    max-width:380px;
+    display:none;
+    z-index:3;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    filter:drop-shadow(0 8px 22px rgba(0,0,0,.26));
+}
+
+#effect-layer{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:20;
+}
+
+.samsa-fly{
+    position:absolute;
+    width:42px;
+    height:42px;
+    animation:flyUp .9s ease-out forwards;
+    will-change:transform,opacity;
+}
+
 @keyframes flyUp{
-    0%{transform:translateY(0) scale(1);opacity:1;}
-    100%{transform:translateY(-160px) scale(.55);opacity:0;}
+    0%{ transform:translateY(0) scale(1); opacity:1; }
+    100%{ transform:translateY(-160px) scale(.55); opacity:0; }
 }
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);z-index:100;padding:18px;}
-.modal-content{width:min(92vw,430px);border-radius:28px;padding:18px;color:white;
-    background:linear-gradient(180deg,rgba(19,40,80,.98),rgba(9,21,43,.98));
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.62);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    z-index:100;
+    padding:18px;
 }
-.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.modal-head h2{margin:0;font-size:22px;}
-.close{font-size:30px;cursor:pointer;line-height:1;user-select:none;}
-.shop-card{background:rgba(255,255,255,.08);border-radius:24px;padding:16px;}
-.shop-preview{display:flex;justify-content:center;margin-bottom:12px;}
-.shop-preview img{width:160px;display:block;}
-.shop-title{text-align:center;font-size:18px;font-weight:700;margin-bottom:6px;}
-.shop-meta{text-align:center;color:rgba(255,255,255,.8);font-size:15px;line-height:1.5;margin-bottom:14px;}
-.shop-actions button{width:100%;padding:14px;border:none;border-radius:16px;font-size:16px;font-weight:700;color:white;margin-top:10px;cursor:pointer;}
-.primary-btn{background:linear-gradient(90deg,#ffb000,#ff8a00);}
-.secondary-btn{background:rgba(255,255,255,.12);}
-.task-card{background:rgba(255,255,255,.08);border-radius:18px;padding:14px;margin-bottom:12px;}
-.task-title{font-size:16px;font-weight:700;margin-bottom:8px;}
-.task-progress{font-size:14px;color:rgba(255,255,255,.75);margin-bottom:10px;}
-.task-btn{width:100%;border:none;border-radius:14px;padding:12px;font-size:15px;font-weight:700;color:white;background:linear-gradient(90deg,#ffb000,#ff8a00);}
-.task-btn.done{background:rgba(255,255,255,.12);}
-.profile-box{text-align:center;}
-#profileAvatar{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.2);margin-bottom:14px;}
-.profile-name{font-size:22px;font-weight:700;margin-bottom:14px;}
-.profile-stat{font-size:17px;margin-bottom:10px;}
+
+.modal-content{
+    width:min(92vw,430px);
+    border-radius:28px;
+    padding:18px;
+    color:white;
+    background:linear-gradient(180deg, rgba(19,40,80,.98), rgba(9,21,43,.98));
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 18px 55px rgba(0,0,0,.45);
+}
+
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+}
+
+.modal-head h2{
+    margin:0;
+    font-size:22px;
+}
+
+.close{
+    font-size:30px;
+    cursor:pointer;
+    line-height:1;
+    user-select:none;
+}
+
+.shop-card, .task-card, .profile-box{
+    background:rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:16px;
+}
+
+.shop-preview, .profile-preview{
+    display:flex;
+    justify-content:center;
+    margin-bottom:12px;
+}
+
+.shop-preview img{
+    width:160px;
+    display:block;
+}
+
+.shop-title{
+    text-align:center;
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:6px;
+}
+
+.shop-meta{
+    text-align:center;
+    color:rgba(255,255,255,.82);
+    font-size:15px;
+    line-height:1.5;
+    margin-bottom:14px;
+}
+
+.shop-actions button,
+.task-btn,
+.daily-btn,
+.copy-btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:16px;
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+.primary-btn{
+    background:linear-gradient(90deg,#ffb000,#ff8a00);
+}
+
+.secondary-btn{
+    background:rgba(255,255,255,.12);
+}
+
+.task-card{
+    margin-bottom:12px;
+}
+
+.task-title{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:8px;
+}
+
+.task-progress{
+    font-size:14px;
+    color:rgba(255,255,255,.75);
+    margin-bottom:10px;
+}
+
+.task-btn.done{
+    background:rgba(255,255,255,.12);
+}
+
+.daily-card{
+    margin-bottom:14px;
+}
+
+.profile-box{
+    text-align:center;
+}
+
+#profileAvatar{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid rgba(255,255,255,.2);
+    margin-bottom:14px;
+}
+
+.profile-name{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:14px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.profile-stat{
+    font-size:17px;
+    margin-bottom:10px;
+}
+
+.invite-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    align-items:center;
+}
+
+.invite-row input{
+    flex:1;
+    min-width:0;
+    border:none;
+    outline:none;
+    border-radius:14px;
+    padding:12px 10px;
+    background:rgba(255,255,255,.12);
+    color:white;
+    font-size:12px;
+}
+
+.copy-btn{
+    width:auto;
+    padding:12px 14px;
+    background:rgba(255,255,255,.16);
+    margin-top:0;
+    white-space:nowrap;
+}
+
+@media (max-height:700px){
+    .top{ padding-top:72px; }
+    .name{ margin-bottom:10px; }
+    .stat{ font-size:16px; margin:8px 0 5px; }
+    .bar{ margin-bottom:12px; }
+    #girl{ width:min(88vw,330px); bottom:88px; }
+    .shop-control{ width:84px; }
+}
+
+@media (max-width:430px){
+    #girl{ width:min(88vw,340px); }
+    .shop-control{ width:84px; font-size:15px; }
+}
 </style>
 </head>
-
 <body>
 
-<button class="music-button" id="musicBtn">🔊</button>
-<button class="tasks-button" id="tasksBtn">📋</button>
-<button class="profile-button" id="profileBtn">👤</button>
-<button class="shop-button" id="shopBtn">🛒 Магазин</button>
+<div class="controls">
+    <button class="control-btn" id="musicBtn" aria-label="Музыка">🔊</button>
+    <button class="control-btn" id="tasksBtn" aria-label="Задания">📋</button>
+    <button class="control-btn" id="profileBtn" aria-label="Профиль">👤</button>
+    <div class="spacer"></div>
+    <button class="control-btn shop-control" id="shopBtn" aria-label="Магазин">🛒</button>
+</div>
 
 <audio id="bgMusic" loop>
     <source src="assets/music.mp3" type="audio/mpeg">
@@ -82,9 +396,12 @@ body::before{content:"";position:fixed;inset:0;
 
 <div class="top">
     <div class="name" id="playerName">Игрок</div>
+
     <div class="stat">💰 Баланс: <span id="balance">0</span></div>
+
     <div class="stat">⚡ Энергия: <span id="energyText">10/10</span></div>
     <div class="bar"><div id="energyBar" class="fill"></div></div>
+
     <div class="stat">📈 Уровень: <span id="levelText">1</span></div>
     <div class="bar"><div id="levelBar" class="fill"></div></div>
 </div>
@@ -106,16 +423,20 @@ body::before{content:"";position:fixed;inset:0;
             <h2>Магазин</h2>
             <div class="close" id="closeModal">×</div>
         </div>
+
         <div class="shop-card">
             <div class="shop-preview">
                 <img id="itemGirlImg" src="assets/girl1.png" alt="girl item">
             </div>
+
             <div class="shop-title">Девушка-помощница</div>
+
             <div class="shop-meta">
                 Уровень: <span id="girlLevelDisplay">0</span>/10<br>
                 Доход: +<span id="girlIncomeDisplay">1</span>/сек<br>
                 Цена: <span id="girlPrice">1000</span>
             </div>
+
             <div class="shop-actions">
                 <button id="buyGirlBtn" class="primary-btn">Купить</button>
                 <button id="upgradeGirlBtn" class="secondary-btn" style="display:none;">Улучшить</button>
@@ -131,6 +452,13 @@ body::before{content:"";position:fixed;inset:0;
             <h2>Задания</h2>
             <div class="close" id="closeTasks">×</div>
         </div>
+
+        <div id="dailyBonusCard" class="task-card daily-card">
+            <div class="task-title">📅 Ежедневный бонус</div>
+            <div class="task-progress" id="dailyBonusInfo">Забери награду за вход</div>
+            <button class="daily-btn primary-btn" id="dailyClaimBtn">Получить</button>
+        </div>
+
         <div id="tasksContainer"></div>
     </div>
 </div>
@@ -142,394 +470,615 @@ body::before{content:"";position:fixed;inset:0;
             <h2>Профиль</h2>
             <div class="close" id="closeProfile">×</div>
         </div>
+
         <div class="profile-box">
             <label for="avatarInput">
-                <img id="profileAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                <img id="profileAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
             </label>
+
             <input type="file" id="avatarInput" accept="image/*" hidden>
+
             <div class="profile-name" id="profileName">Игрок</div>
+
             <div class="profile-stat">💰 Баланс: <span id="profileBalance">0</span></div>
             <div class="profile-stat">📈 Уровень: <span id="profileLevel">1</span></div>
             <div class="profile-stat">👆 Тапов: <span id="profileTaps">0</span></div>
+            <div class="profile-stat">🆔 Код: <span id="profileId"></span></div>
+
+            <div class="invite-row">
+                <input id="inviteLink" readonly>
+                <button class="copy-btn" id="copyInviteBtn">Копировать</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 (() => {
-    // Элементы UI
-    const balanceEl = document.getElementById('balance');
-    const energyTextEl = document.getElementById('energyText');
-    const energyBarEl = document.getElementById('energyBar');
-    const levelTextEl = document.getElementById('levelText');
-    const levelBarEl = document.getElementById('levelBar');
-    const playerNameEl = document.getElementById('playerName');
-    const tandoorEl = document.getElementById('tandoor');
-    const girlEl = document.getElementById('girl');
-    const effectLayer = document.getElementById('effect-layer');
-    const shopBtn = document.getElementById('shopBtn');
-    const closeModal = document.getElementById('closeModal');
-    const shopModal = document.getElementById('shopModal');
-    const buyGirlBtn = document.getElementById('buyGirlBtn');
-    const upgradeGirlBtn = document.getElementById('upgradeGirlBtn');
-    const girlLevelDisplay = document.getElementById('girlLevelDisplay');
-    const girlPriceDisplay = document.getElementById('girlPrice');
-    const girlIncomeDisplay = document.getElementById('girlIncomeDisplay');
-    const itemGirlImg = document.getElementById('itemGirlImg');
-    const musicBtn = document.getElementById('musicBtn');
-    const tasksBtn = document.getElementById('tasksBtn');
-    const closeTasks = document.getElementById('closeTasks');
-    const tasksModal = document.getElementById('tasksModal');
-    const tasksContainer = document.getElementById('tasksContainer');
-    const profileBtn = document.getElementById('profileBtn');
-    const closeProfile = document.getElementById('closeProfile');
-    const profileModal = document.getElementById('profileModal');
-    const profileAvatar = document.getElementById('profileAvatar');
-    const avatarInput = document.getElementById('avatarInput');
-    const profileName = document.getElementById('profileName');
-    const profileBalance = document.getElementById('profileBalance');
-    const profileLevel = document.getElementById('profileLevel');
-    const profileTaps = document.getElementById('profileTaps');
+    const SAVE_KEY = "tonfarm_save";
+    const BOT_USERNAME = "YOUR_BOT_USERNAME"; // заменишь на username своего бота
 
-    // Загрузка сохранения
-    const save = JSON.parse(localStorage.getItem("tonfarm_save")) || {};
-    let balance = save.balance || 0;
-    let energy = (save.energy !== undefined) ? save.energy : 10;
-    let girlBought = save.girlBought || false;
-    let girlLevel = save.girlLevel || 0;
-    let totalTaps = save.totalTaps || 0;
-    let spentEnergy = save.spentEnergy || 0;
-    let tasksClaimed = save.tasksClaimed || [];
-    let avatar = save.avatar || null;
-    let musicEnabled = (save.music !== undefined) ? save.music : true;
-    let refParam = save.refParam || null;
+    const DEFAULT_STATE = {
+        balance: 0,
+        energy: 10,
+        girlBought: false,
+        girlLevel: 0,
+        totalTaps: 0,
+        spentEnergy: 0,
+        tasksClaimed: [],
+        avatar: "",
+        music: true,
+        playerId: "",
+        referrer: "",
+        dailyStreak: 0,
+        lastDailyClaim: "",
+        startParam: "",
+        openShopCount: 0
+    };
 
-    // Установить сохранённый аватар
-    if(avatar){
-        profileAvatar.src = avatar;
+    function makeId() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID().slice(0, 8);
+        return Math.random().toString(36).slice(2, 10);
     }
 
-    // Функция сохранения всех данных
-    function saveGame(){
-        const saveData = {
-            balance: balance,
-            energy: energy,
-            girlBought: girlBought,
-            girlLevel: girlLevel,
-            totalTaps: totalTaps,
-            spentEnergy: spentEnergy,
-            tasksClaimed: tasksClaimed,
-            avatar: avatar,
-            music: musicEnabled,
-            refParam: refParam
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+                return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+            }
+        } catch (_) {}
+
+        const legacy = {
+            balance: parseInt(localStorage.getItem("balance")) || 0,
+            energy: parseInt(localStorage.getItem("energy")) || 10,
+            girlBought: localStorage.getItem("girlBought") === "true",
+            girlLevel: parseInt(localStorage.getItem("girlLevel")) || 0,
+            totalTaps: parseInt(localStorage.getItem("totalTaps")) || 0,
+            spentEnergy: parseInt(localStorage.getItem("spentEnergy")) || 0,
+            tasksClaimed: (() => {
+                try { return JSON.parse(localStorage.getItem("tasksClaimed")) || []; } catch (_) { return []; }
+            })(),
+            avatar: localStorage.getItem("avatar") || "",
+            music: (localStorage.getItem("music") !== "off"),
+            playerId: localStorage.getItem("playerId") || "",
+            referrer: localStorage.getItem("referrer") || "",
+            dailyStreak: parseInt(localStorage.getItem("dailyStreak")) || 0,
+            lastDailyClaim: localStorage.getItem("lastDailyClaim") || "",
+            startParam: localStorage.getItem("startParam") || "",
+            openShopCount: parseInt(localStorage.getItem("openShopCount")) || 0
         };
-        localStorage.setItem("tonfarm_save", JSON.stringify(saveData));
+
+        return { ...DEFAULT_STATE, ...legacy };
     }
 
-    // Установить имя игрока и Telegram
-    function setPlayerName(){
-        if(window.Telegram?.WebApp){
-            Telegram.WebApp.ready();
-            Telegram.WebApp.expand();
-            const user = Telegram.WebApp.initDataUnsafe?.user;
-            if(user){
-                playerNameEl.innerText = user.first_name;
-                profileName.innerText = user.first_name;
-            }
-            const startParam = Telegram.WebApp.initDataUnsafe.start_param;
-            if(startParam){
-                refParam = startParam;  // сохранение параметра реферала (заглушка)
-                saveGame();
-            }
-        }
+    let state = loadState();
+    if (!state.playerId) state.playerId = makeId();
+
+    const girlPrices = [0,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000];
+    const girlIncome = [0,1,2,4,7,12,18,26,38,52,75];
+    const dailyRewards = [100,250,500,800,1200,2500,5000];
+
+    const balanceEl = document.getElementById("balance");
+    const energyTextEl = document.getElementById("energyText");
+    const energyBarEl = document.getElementById("energyBar");
+    const levelTextEl = document.getElementById("levelText");
+    const levelBarEl = document.getElementById("levelBar");
+    const playerNameEl = document.getElementById("playerName");
+    const tandoorEl = document.getElementById("tandoor");
+    const girlEl = document.getElementById("girl");
+    const effectLayer = document.getElementById("effect-layer");
+
+    const musicBtn = document.getElementById("musicBtn");
+    const tasksBtn = document.getElementById("tasksBtn");
+    const profileBtn = document.getElementById("profileBtn");
+    const shopBtn = document.getElementById("shopBtn");
+
+    const bgMusic = document.getElementById("bgMusic");
+
+    const shopModal = document.getElementById("shopModal");
+    const closeModal = document.getElementById("closeModal");
+    const buyGirlBtn = document.getElementById("buyGirlBtn");
+    const upgradeGirlBtn = document.getElementById("upgradeGirlBtn");
+    const girlLevelDisplay = document.getElementById("girlLevelDisplay");
+    const girlPriceDisplay = document.getElementById("girlPrice");
+    const girlIncomeDisplay = document.getElementById("girlIncomeDisplay");
+    const itemGirlImg = document.getElementById("itemGirlImg");
+
+    const tasksModal = document.getElementById("tasksModal");
+    const closeTasks = document.getElementById("closeTasks");
+    const tasksContainer = document.getElementById("tasksContainer");
+    const dailyBonusInfo = document.getElementById("dailyBonusInfo");
+    const dailyClaimBtn = document.getElementById("dailyClaimBtn");
+
+    const profileModal = document.getElementById("profileModal");
+    const closeProfile = document.getElementById("closeProfile");
+    const profileAvatar = document.getElementById("profileAvatar");
+    const avatarInput = document.getElementById("avatarInput");
+    const profileName = document.getElementById("profileName");
+    const profileBalance = document.getElementById("profileBalance");
+    const profileLevel = document.getElementById("profileLevel");
+    const profileTaps = document.getElementById("profileTaps");
+    const profileId = document.getElementById("profileId");
+    const inviteLink = document.getElementById("inviteLink");
+    const copyInviteBtn = document.getElementById("copyInviteBtn");
+
+    function todayKey(date = new Date()) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
     }
 
-    // Получить уровень по балансу
-    function getLevel(){
-        return Math.floor(balance / 10) + 1;
+    function isYesterdayKey(key) {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        return todayKey(d) === key;
     }
 
-    // Максимум энергии по уровню
-    function getMaxEnergy(){
+    function getLevel() {
+        return Math.floor(state.balance / 10) + 1;
+    }
+
+    function getMaxEnergy() {
         return 10 + (getLevel() - 1) * 2;
     }
 
-    // Обновить данные UI (баланс, энергия, уровень)
-    function updateUI(){
-        const level = getLevel();
-        const maxEnergy = getMaxEnergy();
-        if(energy > maxEnergy) energy = maxEnergy;
-        balanceEl.innerText = balance;
-        energyTextEl.innerText = energy + "/" + maxEnergy;
-        levelTextEl.innerText = level;
-        energyBarEl.style.width = (energy / maxEnergy * 100) + "%";
-        levelBarEl.style.width = ((balance % 10) / 10 * 100) + "%";
+    function syncState() {
+        state.balance = balance;
+        state.energy = energy;
+        state.girlBought = girlBought;
+        state.girlLevel = girlLevel;
+        state.totalTaps = totalTaps;
+        state.spentEnergy = spentEnergy;
+        state.tasksClaimed = tasksClaimed;
+        state.avatar = avatar;
+        state.music = musicEnabled;
+        state.dailyStreak = dailyStreak;
+        state.lastDailyClaim = lastDailyClaim;
+        state.playerId = playerId;
+        state.referrer = referrer;
+        state.startParam = startParam;
+        state.openShopCount = openShopCount;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     }
 
-    // Обновить UI магазина/помощницы
-    function refreshGirlUI(){
+    let balance = state.balance || 0;
+    let energy = state.energy || 10;
+    let girlBought = !!state.girlBought;
+    let girlLevel = state.girlLevel || 0;
+    let totalTaps = state.totalTaps || 0;
+    let spentEnergy = state.spentEnergy || 0;
+    let tasksClaimed = Array.isArray(state.tasksClaimed) ? state.tasksClaimed : [];
+    let avatar = state.avatar || "";
+    let musicEnabled = state.music !== false;
+    let playerId = state.playerId || makeId();
+    let referrer = state.referrer || "";
+    let dailyStreak = state.dailyStreak || 0;
+    let lastDailyClaim = state.lastDailyClaim || "";
+    let startParam = state.startParam || "";
+    let openShopCount = state.openShopCount || 0;
+
+    if (avatar) profileAvatar.src = avatar;
+
+    let tasks = [];
+
+    function buildTasks() {
+        tasks = [];
+
+        const addSeries = (type, thresholds, rewards, prefix, titleFn) => {
+            thresholds.forEach((need, i) => {
+                tasks.push({
+                    id: `${prefix}-${need}`,
+                    type,
+                    need,
+                    reward: rewards[i],
+                    title: titleFn(need)
+                });
+            });
+        };
+
+        addSeries(
+            "taps",
+            [100,500,1000,2500,5000,10000,25000,50000,100000,250000],
+            [200,500,1000,2000,3500,6000,10000,18000,30000,50000],
+            "tap",
+            need => `👆 Нажми ${need} раз`
+        );
+
+        addSeries(
+            "balance",
+            [100,500,1000,2500,5000,10000,25000,50000,100000,250000],
+            [300,700,1500,3000,5000,9000,15000,25000,40000,65000],
+            "bal",
+            need => `💰 Накопи ${need} самс`
+        );
+
+        addSeries(
+            "energy",
+            [50,100,250,500,1000,2500,5000,10000,25000,50000],
+            [250,400,700,1200,2500,5000,9000,15000,25000,40000],
+            "eng",
+            need => `⚡ Потрать ${need} энергии`
+        );
+
+        addSeries(
+            "girl",
+            [1,2,3,4,5,6,7,8,9,10],
+            [500,750,1000,1500,2000,3000,5000,8000,12000,20000],
+            "girl",
+            need => `👧 Прокачай девушку до ${need}`
+        );
+
+        addSeries(
+            "daily",
+            [1,3,5,7,14],
+            [100,300,800,1500,4000],
+            "day",
+            need => `📅 Серия входов: ${need} дн.`
+        );
+
+        addSeries(
+            "ref",
+            [3,5,7,10,25],
+            [500,1200,2500,5000,15000],
+            "ref",
+            need => `👥 Пригласи ${need} друзей`
+        );
+    }
+
+    buildTasks();
+
+    function saveGame() {
+        syncState();
+    }
+
+    function updateUI() {
+        const level = getLevel();
+        const maxEnergy = getMaxEnergy();
+
+        if (energy > maxEnergy) energy = maxEnergy;
+
+        balanceEl.innerText = balance;
+        energyTextEl.innerText = `${energy}/${maxEnergy}`;
+        levelTextEl.innerText = level;
+        energyBarEl.style.width = `${(energy / maxEnergy) * 100}%`;
+        levelBarEl.style.width = `${((balance % 10) / 10) * 100}%`;
+
+        saveGame();
+        updateProfile();
+        renderDailyBonus();
+
+        if (tasksModal.style.display === "flex") {
+            renderTasks();
+        }
+    }
+
+    function setPlayerName() {
+        if (window.Telegram?.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+
+            const user = Telegram.WebApp.initDataUnsafe?.user;
+            if (user) {
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+                playerNameEl.innerText = fullName || "Игрок";
+                profileName.innerText = fullName || "Игрок";
+                state.referrer = state.referrer || "";
+            }
+
+            const sp = Telegram.WebApp.initDataUnsafe?.start_param;
+            if (sp) {
+                startParam = sp;
+                if (!referrer) referrer = sp;
+            }
+        }
+
+        profileId.innerText = playerId;
+
+        const link = `https://t.me/${BOT_USERNAME}?startapp=${playerId}`;
+        inviteLink.value = link;
+    }
+
+    function renderGirlUI() {
         girlLevelDisplay.innerText = girlLevel;
-        if(!girlBought){
+        girlIncomeDisplay.innerText = girlLevel > 0 ? girlIncome[girlLevel] : 0;
+
+        if (!girlBought) {
             buyGirlBtn.style.display = "block";
             upgradeGirlBtn.style.display = "none";
             girlPriceDisplay.innerText = girlPrices[1];
-            girlIncomeDisplay.innerText = girlIncome[1];
             itemGirlImg.src = "assets/girl1.png";
+            girlEl.style.display = "none";
         } else {
             buyGirlBtn.style.display = "none";
-            if(girlLevel < 10){
+
+            if (girlLevel < 10) {
                 upgradeGirlBtn.style.display = "block";
-                girlPriceDisplay.innerText = girlPrices[girlLevel+1];
-                upgradeGirlBtn.innerText = "Улучшить до " + (girlLevel+1);
+                const nextLevel = girlLevel + 1;
+                girlPriceDisplay.innerText = girlPrices[nextLevel];
+                upgradeGirlBtn.innerText = `Улучшить до ${nextLevel}`;
             } else {
                 upgradeGirlBtn.style.display = "none";
                 girlPriceDisplay.innerText = "MAX";
             }
-            girlIncomeDisplay.innerText = girlIncome[girlLevel];
+
             itemGirlImg.src = `assets/girl${girlLevel}.png`;
-        }
-        if(girlBought){
             girlEl.src = `assets/girl${girlLevel}.png`;
             girlEl.style.display = "block";
-        } else {
-            girlEl.style.display = "none";
         }
     }
 
-    // Анимация полёта самсы
-    function spawnSamsa(x, y){
+    function spawnSamsa(x, y) {
         const img = document.createElement("img");
         img.src = "assets/samsa.png";
         img.className = "samsa-fly";
-        img.style.left = (x - 21) + "px";
-        img.style.top = (y - 21) + "px";
+        img.style.left = `${x - 21}px`;
+        img.style.top = `${y - 21}px`;
         effectLayer.appendChild(img);
-        setTimeout(() => { img.remove(); }, 900);
+        setTimeout(() => img.remove(), 900);
     }
 
-    // Запуск музыки при первом взаимодействии
-    function tryStartMusic(){
-        if(!musicEnabled) return;
+    function tryStartMusic() {
+        if (!musicEnabled) return;
         bgMusic.volume = 0.35;
         bgMusic.play().catch(() => {});
     }
 
-    // При тапе по тандыру
-    function tap(event){
-        if(energy <= 0) return;
-        balance++;
-        energy--;
-        totalTaps++;
-        spentEnergy++;
-        updateUI();
-        saveGame();
-        const x = event.clientX || (window.innerWidth/2);
-        const y = event.clientY || (window.innerHeight/2);
+    function tap(event) {
+        if (energy <= 0) return;
+
+        balance += 1;
+        energy -= 1;
+        totalTaps += 1;
+        spentEnergy += 1;
+
+        const x = event?.clientX || (window.innerWidth / 2);
+        const y = event?.clientY || (window.innerHeight / 2);
+
         spawnSamsa(x, y);
+        updateUI();
         tryStartMusic();
     }
 
-    // Авто-доход от помощницы
-    function autoIncomeTick(){
-        if(!girlBought) return;
-        if(girlLevel > 0){
-            balance += Number(girlIncome[girlLevel]);
-            updateUI();
-            saveGame();
-        }
+    function autoIncomeTick() {
+        if (!girlBought || girlLevel <= 0) return;
+        balance += Number(girlIncome[girlLevel] || 0);
+        updateUI();
     }
 
-    // Начальные данные задачи (ID, название, прогресс, награда, тип)
-    /*
-    | id | Название              | Нужен | Награда | Тип     |
-    |----|-----------------------|-------|---------|---------|
-    | 1  | Нажми 100 раз         | 100   | 200     | taps    |
-    | 2  | Накопи 1000 самс      | 1000  | 700     | balance |
-    | 3  | Купи помощницу        | 1     | 500     | girl    |
-    | 4  | Пригласи 3 друзей     | 3     | 500     | ref     |
-    | 5  | Потрать 100 энергии   | 100   | 300     | energy  |
-    */
-    const tasks = [
-        {id: 1, title: "👆 Нажми 100 раз", need: 100, reward: 200, type: "taps"},
-        {id: 2, title: "💰 Накопи 1000 самс", need: 1000, reward: 700, type: "balance"},
-        {id: 3, title: "👧 Купи помощницу", need: 1, reward: 500, type: "girl"},
-        {id: 4, title: "👥 Пригласи 3 друзей", need: 3, reward: 500, type: "ref"},
-        {id: 5, title: "⚡ Потрать 100 энергии", need: 100, reward: 300, type: "energy"}
-    ];
-
-    // Открыть окно заданий
-    tasksBtn.onclick = () => {
-        renderTasks();
-        tasksModal.style.display = "flex";
-    };
-    closeTasks.onclick = () => { tasksModal.style.display = "none"; };
-    tasksModal.onclick = (e) => { if(e.target === tasksModal) tasksModal.style.display = "none"; };
-
-    // Прогресс по заданию
-    function getTaskProgress(task){
-        switch(task.type){
+    function getTaskProgress(task) {
+        switch (task.type) {
             case "taps": return totalTaps;
             case "balance": return balance;
-            case "girl": return girlBought ? 1 : 0;
-            case "ref": return 0;  // заглушка: приглашений пока не учитывается
             case "energy": return spentEnergy;
+            case "girl": return girlLevel;
+            case "daily": return dailyStreak;
+            case "ref": return 0; // заглушка для будущего backend
+            default: return 0;
         }
-        return 0;
     }
 
-    // Отрисовка списка заданий
-    function renderTasks(){
+    function renderDailyBonus() {
+        const today = todayKey();
+        const alreadyClaimed = lastDailyClaim === today;
+        const nextIndex = Math.min(dailyStreak, dailyRewards.length - 1);
+        const reward = dailyRewards[nextIndex];
+
+        dailyBonusInfo.innerText = alreadyClaimed
+            ? `Сегодня уже получено. Серия: ${dailyStreak} дн.`
+            : `Серия: ${dailyStreak} дн. Награда сегодня: +${reward}`;
+
+        dailyClaimBtn.innerText = alreadyClaimed
+            ? "Уже получено"
+            : `Получить +${reward}`;
+
+        dailyClaimBtn.disabled = alreadyClaimed;
+    }
+
+    function claimDailyBonus() {
+        const today = todayKey();
+        if (lastDailyClaim === today) return;
+
+        if (lastDailyClaim && isYesterdayKey(lastDailyClaim)) {
+            dailyStreak += 1;
+        } else {
+            dailyStreak = 1;
+        }
+
+        lastDailyClaim = today;
+        const reward = dailyRewards[Math.min(dailyStreak - 1, dailyRewards.length - 1)];
+        balance += reward;
+
+        saveGame();
+        updateUI();
+        renderDailyBonus();
+        if (tasksModal.style.display === "flex") renderTasks();
+    }
+
+    function renderTasks() {
         tasksContainer.innerHTML = "";
+
         tasks.forEach(task => {
             const progress = getTaskProgress(task);
             const completed = progress >= task.need;
             const claimed = tasksClaimed.includes(task.id);
+
             const card = document.createElement("div");
             card.className = "task-card";
+
             card.innerHTML = `
                 <div class="task-title">${task.title}</div>
                 <div class="task-progress">${Math.min(progress, task.need)}/${task.need}</div>
-                <button class="task-btn ${claimed ? 'done' : ''}"
-                        ${(!completed || claimed) ? 'disabled' : ''}
-                        onclick="claimTask(${task.id})">
-                    ${claimed ? 'Получено' : (completed ? `Забрать +${task.reward}` : `Награда ${task.reward}`)}
+                <button class="task-btn ${claimed ? "done" : ""}"
+                    ${(!completed || claimed) ? "disabled" : ""}
+                    onclick="claimTask('${task.id}')">
+                    ${claimed ? "Получено" : (completed ? `Забрать +${task.reward}` : `Награда +${task.reward}`)}
                 </button>
             `;
+
             tasksContainer.appendChild(card);
         });
     }
 
-    // Получение награды за задание
     window.claimTask = (id) => {
         const task = tasks.find(t => t.id === id);
-        if(!task) return;
-        if(tasksClaimed.includes(id)) return;
+        if (!task) return;
+        if (tasksClaimed.includes(id)) return;
+        if (getTaskProgress(task) < task.need) return;
+
         tasksClaimed.push(id);
         balance += task.reward;
-        alert(`🎉 Получено ${task.reward} самс!`);
-        updateUI();
         saveGame();
+        updateUI();
         renderTasks();
     };
 
-    // Открыть окно профиля
-    profileBtn.onclick = () => {
-        updateProfile();
-        profileModal.style.display = "flex";
-    };
-    closeProfile.onclick = () => { profileModal.style.display = "none"; };
-    profileModal.onclick = (e) => { if(e.target === profileModal) profileModal.style.display = "none"; };
-
-    // Обновить данные профиля
-    function updateProfile(){
+    function updateProfile() {
         profileBalance.innerText = balance;
         profileLevel.innerText = getLevel();
         profileTaps.innerText = totalTaps;
         profileName.innerText = playerNameEl.innerText;
+        profileId.innerText = playerId;
+        profileAvatar.src = avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        inviteLink.value = `https://t.me/${BOT_USERNAME}?startapp=${playerId}`;
     }
 
-    // Загрузка сохранённого аватара в профиль
-    if(avatar){
-        profileAvatar.src = avatar;
+    function openModal(modal) {
+        modal.style.display = "flex";
     }
-    // Смена аватара
+
+    function closeAnyModal(modal) {
+        modal.style.display = "none";
+    }
+
+    // Музыка
+    musicBtn.onclick = () => {
+        musicEnabled = !musicEnabled;
+        musicBtn.innerText = musicEnabled ? "🔊" : "🔇";
+        if (musicEnabled) {
+            bgMusic.play().catch(() => {});
+            document.body.addEventListener("pointerdown", tryStartMusic, { once: true });
+        } else {
+            bgMusic.pause();
+        }
+        saveGame();
+    };
+
+    // Магазин
+    shopBtn.onclick = () => {
+        state.openShopCount = (state.openShopCount || 0) + 1;
+        saveGame();
+        renderGirlUI();
+        openModal(shopModal);
+    };
+    closeModal.onclick = () => closeAnyModal(shopModal);
+    shopModal.onclick = (e) => { if (e.target === shopModal) closeAnyModal(shopModal); };
+
+    buyGirlBtn.onclick = () => {
+        if (balance >= girlPrices[1]) {
+            balance -= girlPrices[1];
+            girlBought = true;
+            girlLevel = 1;
+            updateUI();
+            renderGirlUI();
+        }
+    };
+
+    upgradeGirlBtn.onclick = () => {
+        const nextLevel = girlLevel + 1;
+        if (nextLevel > 10) return;
+        if (balance >= girlPrices[nextLevel]) {
+            balance -= girlPrices[nextLevel];
+            girlLevel = nextLevel;
+            updateUI();
+            renderGirlUI();
+        }
+    };
+
+    // Задания
+    tasksBtn.onclick = () => {
+        renderTasks();
+        renderDailyBonus();
+        openModal(tasksModal);
+    };
+    closeTasks.onclick = () => closeAnyModal(tasksModal);
+    tasksModal.onclick = (e) => { if (e.target === tasksModal) closeAnyModal(tasksModal); };
+    dailyClaimBtn.onclick = claimDailyBonus;
+
+    // Профиль
+    profileBtn.onclick = () => {
+        updateProfile();
+        openModal(profileModal);
+    };
+    closeProfile.onclick = () => closeAnyModal(profileModal);
+    profileModal.onclick = (e) => { if (e.target === profileModal) closeAnyModal(profileModal); };
+
     avatarInput.onchange = (e) => {
         const file = e.target.files[0];
-        if(!file) return;
+        if (!file) return;
+
         const reader = new FileReader();
         reader.onload = () => {
-            const result = reader.result;
-            profileAvatar.src = result;
-            avatar = result;
+            avatar = reader.result;
+            profileAvatar.src = avatar;
             saveGame();
         };
         reader.readAsDataURL(file);
     };
 
-    // Кнопка музыки
-    musicBtn.onclick = () => {
-        if(bgMusic.paused){
-            bgMusic.play().catch(() => {});
-            musicEnabled = true;
-            musicBtn.innerText = "🔊";
-        } else {
-            bgMusic.pause();
-            musicEnabled = false;
-            musicBtn.innerText = "🔇";
-        }
-        saveGame();
-    };
-
-    // Кнопки магазина
-    shopBtn.onclick = () => {
-        refreshGirlUI();
-        shopModal.style.display = "flex";
-    };
-    closeModal.onclick = () => { shopModal.style.display = "none"; };
-    shopModal.onclick = (e) => { if(e.target === shopModal) shopModal.style.display = "none"; };
-
-    // Покупка помощницы
-    buyGirlBtn.onclick = () => {
-        if(balance >= girlPrices[1]){
-            balance -= girlPrices[1];
-            girlBought = true;
-            girlLevel = 1;
-            updateUI();
-            saveGame();
-            refreshGirlUI();
+    copyInviteBtn.onclick = async () => {
+        const text = inviteLink.value;
+        try {
+            await navigator.clipboard.writeText(text);
+            copyInviteBtn.innerText = "Скопировано";
+            setTimeout(() => copyInviteBtn.innerText = "Копировать", 1200);
+        } catch (_) {
+            inviteLink.select();
+            document.execCommand("copy");
+            copyInviteBtn.innerText = "Скопировано";
+            setTimeout(() => copyInviteBtn.innerText = "Копировать", 1200);
         }
     };
 
-    // Улучшение помощницы
-    upgradeGirlBtn.onclick = () => {
-        const nextLevel = girlLevel + 1;
-        if(nextLevel > 10) return;
-        if(balance >= girlPrices[nextLevel]){
-            balance -= girlPrices[nextLevel];
-            girlLevel = nextLevel;
-            updateUI();
-            saveGame();
-            refreshGirlUI();
-        }
-    };
-
-    // Тап по тандыру
-    tandoorEl.addEventListener("click", (e) => { tap(e); });
+    // Тапы
+    tandoorEl.addEventListener("click", (e) => tap(e));
     tandoorEl.addEventListener("touchend", (e) => {
         e.preventDefault();
         tap(e.changedTouches[0]);
     }, { passive: false });
 
-    // Инициализация
+    // Инициализация Telegram
     setPlayerName();
     updateUI();
-    refreshGirlUI();
+    renderGirlUI();
+    renderDailyBonus();
+    updateProfile();
+    saveGame();
 
-    if(musicEnabled){
+    if (musicEnabled) {
         musicBtn.innerText = "🔊";
         document.body.addEventListener("pointerdown", tryStartMusic, { once: true });
     } else {
         musicBtn.innerText = "🔇";
     }
 
-    // Регенерация энергии
+    // Реген энергии
     setInterval(() => {
         const maxEnergy = getMaxEnergy();
-        if(energy < maxEnergy){
-            energy++;
+        if (energy < maxEnergy) {
+            energy += 1;
             updateUI();
-            saveGame();
         }
     }, 1000);
 
-    // Авто-доход каждую секунду
+    // Доход девушки
     setInterval(autoIncomeTick, 1000);
 
-    // Массив цен и доходов девочки (как ранее)
-    const girlPrices = [0,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000];
-    const girlIncome = [0,1,2,4,7,12,18,26,38,52,75];
+    // Мягкая защита от двойного тапа/зумов
+    document.addEventListener("gesturestart", e => e.preventDefault());
+    document.addEventListener("dblclick", e => e.preventDefault());
 })();
 </script>
-
 </body>
 </html>
